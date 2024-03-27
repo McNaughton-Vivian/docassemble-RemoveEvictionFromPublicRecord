@@ -1,0 +1,1562 @@
+metadata:
+  title: Remove an Eviction from Public Record
+  short title: Remove Eviction from Record
+  comment: This program helps you ask a judge to remove an eviction court file from the public record so it does not show up in a background check or credit report.
+  authors:
+    - Vivian McNaughton
+    - Matt Newsted
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALToolbox:phone-number-validation.yml  
+  - docassemble.ILAO:ilao-interview-framework.yml
+  - docassemble.ILAO:shared-basic-questions.yml
+---
+objects:
+  - users: ALPeopleList.using(there_are_any=True)
+  - users[i].lawyer: ALIndividual
+  - other_parties: ALPeopleList.using(there_are_any=True)
+  - other_parties[i].lawyer: ALIndividual
+  - witness: ALIndividual
+  - delivery_parties: ALPeopleList.using(there_are_any=True)
+  - delivery_parties[i].lawyer: ALIndividual
+  - dummy_list: ALPeopleList.using(there_are_any=True)
+  - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
+---
+#Add the easy form url once created!
+code: |
+  ilao_easy_form_title = "Remove Eviction from Public Record"
+  ilao_easy_form_url = "https://www.illinoislegalaid.org"
+  github_user = 'IllinoisLegalAidOnline'
+  github_repo_name = 'docassemble-RemoveEvictionFromPublicRecord'
+---
+# Road map
+sections:
+  - section_intro: Start
+  - section_motion: Motion details
+  - section_delivery: Notice and delivery
+  - section_about_you: About you
+  - section_download: Download  
+---
+# interview order block
+mandatory: True
+code: |
+  nav.set_section('section_intro')
+  anyone_opposing = True
+  form_name = "Motion to Remove Eviction Court File from Public Record"
+  sees_nav_bar
+  how_to_use
+  set_progress(5)
+  whats_next
+  accept_terms
+  
+  nav.set_section('section_motion')
+  party_label
+  trial_court_index
+  set_progress(20)
+  if foreclosure == False:
+    if sufficiency == False:
+      no_reason_kickout
+    fact_law
+    additional_details_fact_law
+    interest_justice
+    additional_details_interest_justice
+    
+  nav.set_section('section_delivery')
+  set_progress(40)
+  users.gather()
+  other_parties.gather()
+  unknown_occupants_check
+  if contacted_others == True:
+    any_object
+  notice_intro
+  set_progress(60)
+  if has_court_date:
+    hearing_date
+  delivery_intro
+  for person in delivery_parties:
+    if person.is_represented:
+      person.lawyer.name.first
+    person.address.address
+    if person.knows_delivery_method:
+      person.mail_delivery
+      person.delivery_date
+  set_progress(80)
+  for person in delivery_parties:
+    if person.knows_delivery_method == False or person.hand_delivery == True:
+      hand_delivery_info
+
+  courthouse_info
+  nav.set_section('section_about_you')
+  users[0].address.address
+  users[0].has_email_address
+  e_signature
+  if delivery_parties.number_gathered() > 2:
+    dummy_list.there_are_any = True
+    dummy_list.gather()
+  else:
+    dummy_list.there_are_any = False
+  #debug_screen
+  nav.set_section('section_download')
+  seal_or_impound_info
+  if party_label == "defendant":
+    your_rights
+  set_progress(100)
+  get_docs_screen
+---
+code: |
+  dummy_list[i].name.first = "This is"
+  dummy_list[i].name.last = "a workaround for a list comprehension limitation"
+  if i < (delivery_parties.number_gathered() - 1):
+    dummy_list.there_is_another = True
+  else:
+    dummy_list.there_is_another = False
+---
+id: debug screen
+continue button field: debug_screen
+question: |
+  Debug
+subquestion: |
+  The length of the dummy list is ${dummy_list.number_gathered()}.
+  
+  The length of the delivery parties list is ${delivery_parties.number_gathered()}.
+  
+  The length of the users is ${users.number_gathered()}. This includes the program user.
+  
+  The length of the other parties list is ${other_parties.number_gathered()}.
+---
+id: welcome
+question: |
+  Remove an eviction from public record
+subquestion: |
+  Welcome to Illinois Legal Aid Online's **Remove an eviction from public record** Easy Form.
+  
+  This program helps you ask a judge to remove an eviction court file from the public record so it does not show up in a background check or credit report. This program makes a *Motion to Remove Eviction Court File from Public Record*.
+  
+  To learn more, read ILAO's article about [**What happens if I have an eviction on my record?**](https://www.illinoislegalaid.org/legal-information/what-happens-if-i-have-eviction-my-record)
+field: sees_nav_bar
+---
+id: instructions
+continue button field: how_to_use
+question: |
+  Instructions
+subquestion: |
+  To use this program you will need a copy of the **{Eviction Order}** that was entered against you.
+
+  Set aside 10 to 15 minutes to finish this program. You can log in and save your work to return to later. 
+ 
+  ${ collapse_template(help_example) }  
+
+  Click on **{green words}** to learn what they mean. Some questions have a question mark in a circle ${ fa_icon("question-circle", color_css="#0dcaf0" ) } that helps explain things.
+---
+template: help_example
+subject: |
+  **You can click sections like this to show more information.**
+content: |  
+  This is an example of help. Click again to hide.
+---
+id: whats next
+continue button field: whats_next
+question: |
+  After you finish this program
+subquestion: |
+  After you download your *Motion to Remove Eviction Court File from Public Record*, you must file it with the court. This program does not file your forms for you.
+  
+  You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your local circuit clerk for how to schedule a motion hearing.
+  
+  Finally, you will need to send your *Motion to Remove Eviction Court File from Public Record* and *Notice of Court Date for Motion* forms to other parties in your case, if there are any.
+  
+  To learn more, read the instructions you can download at the end of this program. 
+---
+id: tenant or landlord
+question: |
+  Are you the tenant or the landlord?
+subquestion: |
+  If you are listed as a defendant in the eviction order, you should click **Tenant**.
+  
+  If you are listed as a plaintiff in the eviction order, you should click **Landlord**.
+field: party_label
+choices:
+  - Tenant: defendant
+  - Landlord: plaintiff
+---
+id: contact other parties
+question: |
+  Have you contacted the other parties about removing the eviction from the public record?
+fields:
+  - no label: contacted_others
+    datatype: yesnoradio
+---
+id: other parties object
+question: |
+  Do any of the other parties object to removing the eviction from the public record?
+fields:
+  - no label: any_object
+    datatype: yesnoradio
+---
+id: foreclosure check
+question: |
+  % if party_label == "defendant":
+  Were you evicted because the building you were living in was foreclosed on?
+  % else:
+  Was the eviction filed because the building the defendant was living in foreclosed on?
+  % endif
+fields:
+  - no label: foreclosure
+    datatype: yesnoradio
+---
+id: sufficiency check
+question: |
+  % if party_label == "defendant":
+  Did your landlord get the facts or law wrong in the eviction case?
+  % else:
+  Did you get the facts or law wrong in the eviction case?
+  % endif
+subquestion: |
+  % if party_label == "defendant":
+  For example, the landlord could have had no reason to file the eviction in the first place or you were not properly served.
+  % else:
+  For example, you could have had no reason to file the eviction in the first place or the defendant was not properly served.
+  % endif
+fields:
+  - no label: sufficiency
+    datatype: yesnoradio
+---
+id: no reason kickout
+event: no_reason_kickout
+question: |
+  Sorry
+subquestion: |
+  % if party_label == "defendant":
+  An eviction court file can only be removed from the public record if the building you were evicted from was foreclosed on or the landlord got the facts or law wrong in the eviction case.
+  % else:
+  An eviction court file can only be removed from the public record if the building the defendant was evicted from was foreclosed on or you got the facts or law wrong in the eviction case.
+  % endif
+  
+  Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: fact law error
+question: |
+  How were the facts or law wrong?
+fields:
+  - The facts or law were wrong because...: fact_law
+    datatype: checkboxes
+    none of the above: False
+    choices:
+      - The landlord had no reason to file the eviction.: no_reason
+      - The tenant was not properly served with an eviction notice or summons and a copy of the eviction complaint.: not_served
+      - Other: other
+  - Other reason: other_fact_law_text
+    input type: area
+    rows: 2
+    maxlength: 200
+    show if: 
+      variable: fact_law['other'] 
+      is: True
+---
+id: additional details fact law
+question: |
+  Why were the facts or law wrong?
+subquestion: |
+  You said the facts or law were wrong because:
+  
+  % if fact_law['no_reason'] == True:
+  * The landlord had no reason to file the eviction.
+  % endif
+  % if fact_law['not_served'] == True:
+  * The tenant was not properly served with an eviction notice or summons and a copy of the eviction complaint.
+  % endif
+  % if fact_law['other'] == True:
+  * ${other_fact_law_text}
+  % endif
+  
+  Please provide details explaining your answer.
+fields:
+  - Details: additional_details_fact_law
+    input type: area
+    rows: 4
+    maxlength: 500
+---
+id: interest of justice
+question: |
+  How is it in the interest of justice to remove this eviction from the public record?
+fields:
+  - It is more important to keep the court file from being seen by the public than it is to allow the public to see it because...: interest_justice
+    datatype: checkboxes
+    none of the above: False
+    choices:
+      - The eviction record will make it harder to find housing, find a job, or get credit.: harder
+      - Other: other
+  - Other reason: other_interest_justice_text
+    input type: area
+    rows: 2
+    maxlength: 200
+    show if: 
+      variable: interest_justice['other'] 
+      is: True
+---
+id: additional details fact law
+question: |
+  Why is it in the interest of justice to remove this eviction from the public record?
+subquestion: |
+  You said it was in the interest of justice to remove this eviction from the public record because:
+  
+  % if interest_justice['harder'] == True:
+  * The eviction record will make it harder to find housing, find a job, or get credit.
+  % endif
+  % if interest_justice['other'] == True:
+  * ${other_interest_justice_text}
+  % endif
+  
+  Please provide details explaining your answer.
+fields:
+  - Details: additional_details_interest_justice
+    input type: area
+    rows: 4
+    maxlength: 500
+---
+id: unknown occupants check
+question: |
+  Was the **Unknown Occupants** box checked on the *Eviction Complaint*?
+fields:
+  - no label: unknown_occupants_check
+    datatype: yesnoradio
+---
+code: |
+  if party_label == 'plaintiff':
+    opposing_label = 'defendant'
+  if party_label == 'defendant':
+    opposing_label = 'plaintiff'
+  if party_label == 'petitioner':
+    opposing_label = 'respondent'
+  if party_label == 'respondent':
+    opposing_label = 'petitioner'
+---
+id: users names
+question: |
+  % if i == 0:
+  What is your name?
+  % else:
+  What is the name of the ${ordinal(i)} ${party_label} listed on the *Eviction Notice*?
+  % endif
+subquestion: |
+  % if i != 0:
+  ${ collapse_template(long_name_help) }
+  % endif
+fields:
+  - code: |
+      users[i].name_fields(person_or_business='unsure')
+---
+template: long_name_help
+subject: |
+  **What if the person's name doesn't fit into 4 fields?**
+content: |
+  If the person has a long name like "Jane Smith, Director of Housing," select **Business or organization**. You can then enter the full name and title.
+---
+id: any other users
+question: |
+  % if party_label == "defendant":
+  Is anyone else listed as a defendant on the *Eviction Notice*?
+  % else:
+  Is anyone else listed as a plaintiff on the *Eviction Notice*?
+  % endif
+subquestion: |
+  ${ collapse_template(other_users_help) }  
+
+  % if len(users.elements) > 1:  
+  So far you have told us about ${comma_and_list(users.complete_elements().full_names())}.
+  % endif  
+fields:
+  - "Anyone else?": users.there_is_another
+    datatype: yesnoradio
+---
+template: other_users_help
+subject: |
+  **Learn about other ${ party_label }s**
+content: |  
+  You said you are the ${ party_label.capitalize() }. The other people on your side of the case would be co-${ party_label}s.
+  
+  The other ${ party_label}s should be listed with you at the top of the *Eviction Notice*.
+---
+sets:
+  - other_parties[i].name.first
+id: other party name
+question: |
+  What is the name of the ${ ordinal(i) } ${ opposing_label } on the *Eviction Notice*?
+subquestion: |
+  ${ collapse_template(long_name_help) }
+fields:
+  - code: |
+      other_parties[i].name_fields(person_or_business='unsure')
+---
+id: any more other parties
+question: |
+  Are there any other ${ opposing_label }s in the case?
+subquestion: |  
+  So far you have told us about ${comma_and_list(other_parties.complete_elements().full_names())}.
+fields:
+  - "Anyone else?": other_parties.there_is_another
+    datatype: yesnoradio
+---
+code: |
+  def court_county_lookup(lowercase=False):
+    all_court_counties = court_list._load_courts()['address_county'].items()
+    filtered_courts = [(-1, "cook")] if lowercase else [(-1, "Cook")]
+    for court in all_court_counties:
+      if court[1] != "Cook":
+        court_name = court[1].lower() if lowercase else court[1]
+        filtered_courts.append((court[0],court_name))
+    return sorted( filtered_courts, key=lambda y: y[1])
+---
+code: |
+  if trial_court_index == -1:
+    trial_court = court_list.as_court('trial_court', 15)
+    trial_court.address.county = "Cook"
+  else:
+    trial_court = court_list.as_court('trial_court', trial_court_index)
+---
+depends on:
+  - trial_court_index
+  - cook_district
+code: |
+  if trial_court_index == -1:
+    trial_court = court_list.as_court('trial_court', cook_district)
+  else:
+    trial_court = court_list.as_court('trial_court', trial_court_index)
+    
+  court_name = str(trial_court.name)
+  court_street_address = str(trial_court.address.address)
+  court_city = str(trial_court.address.city)
+  court_state = str(trial_court.address.state)
+  court_zip = str(trial_court.address.zip)
+  courthouse_info = court_name + ", " + court_street_address + ", " + court_city + ", " + court_state + " " + court_zip
+---
+id: Cook County district
+question: |
+  In which Cook County courthouse is your case?
+subquestion: |
+  This information should be found near the top of your court papers.
+
+  ${ collapse_template(cook_district_help) }  
+field: cook_district
+choices:
+  - First Municipal District, Daley Center, 50 W. Washington Street, Chicago: 15
+  - Second Municipal District, 5600 Old Orchard Road, Skokie: 16
+  - Third Municipal District, 2121 Euclid Avenue, Rolling Meadows: 17
+  - Fourth Municipal District, 1500 Maybrook Drive, Maywood: 18
+  - Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview: 19
+  - Sixth Municipal District, 16501 South Kedzie Parkway, Markham: 20
+  #- Domestic Violence Court, 555 W. Harrison Street, Chicago: 21
+  #- George N. Leighton Criminal Court Building, 2600 S. California Avenue, Chicago: 22
+  #- Juvenile Center, 2245 West Ogden Avenue, Chicago: 23
+---
+template: cook_district_help
+subject: |
+  **What if I am not sure?**
+content: |  
+  Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text (833) 411-1121 for assistance.
+---
+id: delivery intro
+continue button field: delivery_intro
+question: |
+  Send your ${ form_name } to all other parties
+subquestion: |
+  These are the other parties in this case: ${comma_and_list(delivery_parties)}.
+
+  You must send a copy of your ${ form_name } to each of them.
+
+  If someone in the case has a lawyer, you only need to send it to their lawyer.
+---
+id: extra delivery forms required
+continue button field: extra_delivery_forms
+question: |
+  Additional Proof of Delivery
+subquestion: |
+  This program makes the Proof of Delivery forms for up to 8 other parties.
+  
+  You will need to fill out *Additional Proof of Delivery* forms for ${comma_and_list(delivery_parties[8:])}. 
+  
+  You can download blank *Additional Proof of Delivery* forms at the end of this program.
+---
+id: hand delivery info
+continue button field: hand_delivery_info
+question: |
+  Check your Proof of Delivery
+subquestion: |
+  **Don't forget!** Make sure you review and complete the Proof of Delivery section of your forms. 
+  
+  [FILE proof_of_delivery_snip.png, 100%, Proof of Delivery section of forms]
+
+  **Instructions when delivering your forms by hand:**
+
+  * If a party in your case does not have a lawyer, you can hand-deliver the forms to them or to a family member who is 13 or older at their home.
+  * If they do have a lawyer, you can hand-deliver the forms to the lawyer or to the lawyer's office.
+---
+id: hearing scheduled
+question: |
+  Do you already have a court date scheduled for this motion?
+subquestion: |
+  In some counties, the circuit clerk can give you a hearing date before you file your motion. In other counties, you will get a hearing date when you file your motion. If you have this information now, you can add it to your forms.
+  
+  If the clerk gives you the hearing date after you file your *Motion*, you can add it to your *Notice of Court Date for Motion* later.
+fields:
+  - "Know court date and time?": has_court_date
+    datatype: yesnoradio
+---
+id: hearing info
+question: |
+  Court hearing information
+subquestion: |
+  Enter the date, time, and courtroom information for the court hearing on your motion. If the clerk did not give you a courtroom yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+fields:
+  - Date: hearing_date
+    datatype: date
+    min: ${ today().format("yyyy-MM-dd") }
+  - Time: hearing_time
+    datatype: time
+  - Courtroom: courtroom
+    maxlength: 10
+    required: False
+---
+reconsider: True
+code: |
+  delivery_parties = DAList("delivery_parties", elements = other_parties + users[1:])
+---
+id: notice intro
+continue button field: notice_intro
+question: |
+  Tell all other parties in your case about your motion
+subquestion: |
+  These are the other parties in this case: ${comma_and_list(delivery_parties)}.
+
+  You must tell them about your motion and when you will present it to the judge.
+
+  If someone in the case has a lawyer, you must tell their lawyer.
+---
+id: trial court county
+continue button field: case_county
+question: |
+  In which county was the *Eviction Notice* filed?
+fields:
+  - no label: trial_court_index
+    datatype: integer
+    code: |
+      court_county_lookup()
+---
+id: your contact information
+question: |
+  What is your contact information?
+subquestion: |
+  ${ collapse_template(contact_info_help) }  
+fields:  
+  - Phone number: users[0].phone_number
+    datatype: al_international_phone
+    required: False
+  - Do you have an email address?: users[0].has_email_address      
+    datatype: yesnoradio
+  - note: |
+      This email address will appear on your court forms. Be sure to check 
+      this email daily, otherwise you may miss important information about 
+      your case.
+    show if: users[0].has_email_address      
+  - Email address: users[0].email    
+    datatype: email
+    show if: users[0].has_email_address
+validation code: |
+  if (not showifdef('users[0].phone_number') and \
+      (users[0].has_email_address == False)):
+    validation_error(word("You need to provide at least one contact method."), field="users[0].other_contact_method")
+---
+template: contact_info_help
+subject: |
+  **Why do I need to include this?**
+content: |  
+  The court must be able to reach you, so you need to include some contact information.
+---
+id: has lawyer
+generic object: ALIndividual
+question: |
+  Does ${ x.name.full(middle="full") } have a lawyer in this case?
+field: x.is_represented
+choices:
+  - Yes: True
+  - No: False
+  - I don't know: null 
+# note: null will be None in review screen
+---
+id: add lawyer
+generic object: ALIndividual
+question: |
+  Who is  ${ x.name.full(middle="full") }'s lawyer?
+fields:
+  - First name: x.lawyer.name.first
+  - Middle name: x.lawyer.name.middle
+    required: False
+  - Last name: x.lawyer.name.last
+  - Suffix: x.lawyer.name.suffix
+    code: |
+      name_suffix()
+    required: False  
+---
+id: delivery party address
+sets:
+  - x.address.address
+  - x.address.city
+  - x.address.zip
+generic object: ALIndividual
+question: |
+  % if x.is_represented:
+  What is ${ x.lawyer.name.full(middle="full") }'s address?
+  % else:
+  What is ${ x.name.full(middle="full") }'s address?
+  % endif
+fields:
+  - Street address: x.address.address
+    address autocomplete: True
+  - Address line 2: x.address.unit
+    required: False
+  - City: x.address.city
+  - State: x.address.state
+    code: |
+      states_list()
+    default: IL      
+  - ZIP code: x.address.zip
+---
+#added to remove same as / someplace else default in ql_baseline.yml
+id: users delivery party address
+sets:
+  - users[i].address.address
+  - users[i].address.city
+  - users[i].address.zip
+generic object: ALIndividual
+question: |
+  % if users[i].is_represented:
+  What is ${ users[i].lawyer.name.full(middle="full") }'s address?
+  % else:
+  What is ${ users[i].name.full(middle="full") }'s address?
+  % endif
+fields:
+  - Street address: users[i].address.address
+    address autocomplete: True
+  - Address line 2: users[i].address.unit
+    required: False
+  - City: users[i].address.city
+  - State: users[i].address.state
+    code: |
+      states_list()
+    default: IL      
+  - ZIP code: users[i].address.zip
+
+---
+id: knows delivery method
+generic object: ALIndividual
+question: |
+  % if x.is_represented:
+  Do you know **how** and **when** you will send your ${ form_name } to ${ x.lawyer.name.full(middle="full") }?
+  % else:
+  Do you know **how** and **when** you will send your ${ form_name } to ${ x.name.full(middle="full") }?
+  % endif
+subquestion: |
+  ${ collapse_template(delivery_method_help) }  
+
+  The Proof of Delivery section is where you explain how you will send a copy of your forms to the other parties in the case.
+
+  For best results, complete the Proof of Delivery section and send the forms today.
+
+  If you do not know this now, you can add it to the Proof of Delivery section of your forms later.
+field: x.knows_delivery_method
+choices:
+  - Yes: True
+  - No. I do not know this now. I will add it to my forms later.: False
+---
+template: delivery_method_help
+subject: |
+  **What are my delivery options?**
+content: |  
+  You can deliver the forms by:
+  
+  * The court's **{e-filing system}**,
+  * Email,
+  * US mail or a delivery company (like UPS or FedEx), or
+  * Hand delivery.
+
+  You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
+terms:
+  - e-filing system: |
+      The court's e-filing system could be an electronic filing manager (EFM) or an approved electronic filing service provider (EFSP).
+---
+id: user party delivery method
+#changed from generic object to users to allow for changing answers via Back
+#generic object: ALIndividual
+question: |
+  % if users[i].is_represented:
+  How will you send your ${ form_name } to ${ users[i].lawyer.name.full(middle="full") }?
+  % else:
+  How will you send your ${ form_name } to ${ users[i].name.full(middle="full") }?
+  % endif
+subquestion: |  
+  You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
+
+  For best results, complete the Proof of Delivery section and send the forms today.
+
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
+
+  ${ collapse_template(efiling_help) }
+fields:
+  - E-filing system: users[i].efm_delivery
+    datatype: yesnowide
+    help: |
+      The court's e-filing system could be an electronic filing manager (EFM) or an approved electronic filing service provider (EFSP).
+  - Email: users[i].email_delivery
+    datatype: yesnowide
+  - Email address: users[i].delivery_email
+    datatype: email
+    show if: 
+      variable: users[i].email_delivery
+      is: True
+    required: False
+  - US mail or delivery company (like UPS or FedEx): users[i].mail_delivery
+    datatype: yesnowide
+  - Hand delivery: users[i].hand_delivery
+    datatype: yesnowide
+---
+template: efiling_help
+subject: |
+  **What if I need help?**
+content: |  
+  If you need help delivering by email or using the e-filing service provider, you can visit a [**Legal Self-Help Center**](https://www.illinoislegalaid.org/get-legal-help/lshc-directory) or you can call or text [**Illinois Court Help**](https://www.ilcourthelp.gov) at 833-411-1121.
+---
+id: other party delivery method
+# generic object: ALIndividual
+#changed from generic object to other_parties to allow for changing answers via Back
+question: |
+  % if other_parties[i].is_represented:
+  How will you send your ${ form_name } to ${ other_parties[i].lawyer.name.full(middle="full") }?
+  % else:
+  How will you send your ${ form_name } to ${ other_parties[i].name.full(middle="full") }?
+  % endif
+subquestion: |  
+  You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
+
+  For best results, complete the Proof of Delivery section and send the forms today.
+
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
+
+  ${ collapse_template(efiling_help) }  
+fields:
+  - E-filing system: other_parties[i].efm_delivery
+    datatype: yesnowide
+    help: |
+      The court's e-filing system could be an electronic filing manager (EFM) or an approved electronic filing service provider (EFSP).
+  - Email: other_parties[i].email_delivery
+    datatype: yesnowide
+  - Email address: other_parties[i].delivery_email
+    datatype: email
+    show if: 
+      variable: other_parties[i].email_delivery
+      is: True
+    required: False
+  - US mail or delivery company (like UPS or FedEx): other_parties[i].mail_delivery
+    datatype: yesnowide
+  - Hand delivery: other_parties[i].hand_delivery
+    datatype: yesnowide
+---
+id: delivery time
+generic object: ALIndividual
+question: |
+  % if x.is_represented:
+  When will you send your ${ form_name } to ${ x.lawyer.name.full(middle="full") }?
+  % else:
+  When will you send your ${ form_name } to ${ x.name.full(middle="full") }?
+  % endif
+subquestion: |
+  Be sure to do this **before** you have a hearing on this ${ form_name }. For best results, complete the Proof of Delivery section and send the forms today.
+  
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
+fields:
+  - Date: x.delivery_date
+    datatype: date
+    required: False
+    min: ${ today().format("yyyy-MM-dd") }
+    max: ${ today().plus(years=1) }
+  - Time: x.delivery_time
+    datatype: time
+    required: False
+validation code: |
+  if (not showifdef('x.delivery_date')):
+    x.knows_delivery_date = False
+  else:
+    x.knows_delivery_date = True
+  if (not showifdef('x.delivery_time')):
+    x.knows_delivery_time = False
+  else:
+    x.knows_delivery_time = True
+    
+---
+id: hand delivery info
+continue button field: hand_delivery_info
+question: |
+  Check your Proof of Delivery
+subquestion: |
+  **Don't forget!** Make sure you review and complete the Proof of Delivery section of your forms. 
+  
+  [FILE proof_of_delivery_snip.png, 100%, Proof of Delivery section of forms]
+
+  **Instructions when delivering your forms by hand:**
+
+  * If a party in your case does not have a lawyer, you can hand-deliver the forms to them or to a family member who is 13 or older at their home.
+  * If they do have a lawyer, you can hand-deliver the forms to the lawyer or to the lawyer's office.
+---
+template: signature_help
+subject: |
+  **What does it mean to sign the forms?**
+content: |  
+  By signing your *Motion to Remove Eviction Court File from Public Record*, you are certifying that:
+  
+  * You read the document,
+  * You believe it to be true and correct, and
+  * You are not filing it for an improper purpose.
+
+  See the [**Illinois Supreme Court Rule 137**](https://ilcourtsaudio.blob.core.windows.net/antilles-resources/resources/9ce1fce9-895f-463e-b87d-f9b7631f8fde/Rule%20137.pdf), for more information.
+---
+id: about the court hearing
+continue button field: seal_or_impound_info
+question: |
+  About the court hearing
+subquestion: |
+  At the hearing, the court may use the word **seal** or **impound** instead of **remove**. If you do not know which word the court uses, you should use **remove**.
+  
+  You can learn more from the instructions page that comes with your forms.
+---
+id: your rights
+continue button field: your_rights
+question: |
+  Your rights
+subquestion: |
+  If you remove an eviction from the public record but it shows up later in a background check, your rights may have been violated. If that happens, you may want to speak to a lawyer or a consumer rights advocate.
+  
+  Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
+---
+id: get docs screen
+event: get_docs_screen
+question: |
+  Download
+subquestion: |
+  
+  Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
+
+  This program does not file your Motion with the court or deliver it to other parties in your case. You will need to do this yourself. Learn about more about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/efileil/).
+
+  ${ action_button_html(url_action('review_answers'), label=':edit: Make changes', color='success', size="md") }
+  
+  ${ al_user_bundle.download_list_html() }
+
+  &nbsp;
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+  **Note:** This program does not file your Motion with the court or deliver it to other parties in your case. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/efileil/).
+  
+  Thank you for using ILAO Easy Forms!
+under: |
+  % if not user_logged_in():
+  [${fa_icon("sign-in-alt", color="#0079d0", size="sm")} **Sign-in**](${url_of('login', next=interview_url())}) or [**create**](${url_of('register', next=interview_url())}) an ILAO Easy Form account to save your progress (optional).
+  % endif 
+
+  &nbsp;
+  ${ action_button_html(interview_url(i="docassemble.ILAO:feedback.yml", easy_form_interview=ilao_easy_form_url, easy_form_title=ilao_easy_form_title, easy_form_page=user_info().question_id, easy_form_variable=user_info().variable, local=False,reset=1), label=':comment: Was this program helpful?', color="#181c36", size="md", new_window=True) }
+---
+generic object: ALDocumentBundle
+template: x.send_email_template
+subject: |
+  Motion to remove eviction from public record forms
+content: |
+  Your forms are attached.
+  
+  Thanks for using ILAO Easy Forms!
+  
+  [Illinois Legal Aid Online](https://www.illinoislegalaid.org)
+---
+objects: 
+  - removal_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
+  - removal_motion: ALDocument.using(title="Motion to Remove Eviction from Public Record", filename="removal_motion.pdf", has_addendum=False)
+  - removal_order: ALDocument.using(title="Order on Motion to Remove Eviction from Pubic Record", filename="removal_order.pdf", has_addendum=False)
+  - notice: ALDocument.using( title="Notice of Court Date for Motion", filename="notice.pdf", has_addendum=False)
+  - dummy_list[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
+---
+objects:
+  - additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in dummy_list], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+---
+code: |
+  removal_instructions.enabled = True
+  removal_motion.enabled = True
+  removal_order.enabled = True
+  notice.enabled = True
+  
+  additional_delivery_index = 0
+  while additional_delivery_index < dummy_list.number_gathered():
+    if additional_delivery_index == 0 or additional_delivery_index == 1:
+      dummy_list[additional_delivery_index].additional_proof.enabled = False
+    elif (additional_delivery_index % 2) == 0:
+      dummy_list[additional_delivery_index].additional_proof.enabled = True
+    else:
+      dummy_list[additional_delivery_index].additional_proof.enabled = False
+    additional_delivery_index += 1
+---
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[removal_instructions, removal_motion, notice, additional_proof_bundle, removal_order], filename="motion_to_remove_eviction_from_public_record.pdf", title="All forms")
+  - al_court_bundle: ALDocumentBundle.using(elements=[removal_motion, notice, additional_proof_bundle, removal_order], filename="motion_to_remove_eviction_from_public_record.pdf", title="Motion to Remove Eviction from Public Record")
+---
+attachment:
+  variable name: removal_instructions[i]
+  name: removal_instructions
+  filename: removal_instructions
+  skip undefined: True
+  editable: False
+  pdf template file: REF_Instructions.pdf
+  fields:
+      - "fake": ${ "" }
+---
+attachment:
+  variable name: removal_motion[i]
+  name: removal_motion
+  filename: removal_motion
+  skip undefined: True
+  editable: False
+  pdf template file: REF_Motion.pdf
+  fields:
+      - "filing_county": ${ trial_court.address.county.upper() }
+      - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
+      - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
+      - "case_number": ${""}
+      - "unknown_occupants_check": ${unknown_occupants_check}
+      - "user_is_plaintiff": ${True if party_label == "plaintiff" else False}
+      - "user_is_defendant": ${True if party_label == "defendant" else False}
+      - "user_is_other": ${False}
+      - "no_objections": ${True if contacted_others == True and any_object == False else False}
+      - "foreclosure": ${foreclosure}
+      - "no_basis": ${False if foreclosure else True}
+      - "filed_in_error": ${True if fact_law['no_reason'] and not foreclosure else False}
+      - "service_error": ${ True if fact_law['not_served'] and not foreclosure else False}
+      - "fact_law_other_check": ${ True if fact_law['other'] and not foreclosure else False}
+      - "fact_law_other_text": ${other_fact_law_text if fact_law['other'] and not foreclosure else ""}
+      - "fact_law_details": ${additional_details_fact_law if not foreclosure else ""}
+      - "justice_harder": ${ True if interest_justice['harder'] and not foreclosure else False}
+      - "justice_other_check": ${ True if interest_justice['other'] and not foreclosure else False}
+      - "justice_other_text": ${ other_interest_justice_text if interest_justice['other'] and not foreclosure else ""}
+      - "justice_details": ${ additional_details_interest_justice if not foreclosure else ""}
+      - "user_signature": ${ users[0].name.full(middle='full') if e_signature else ""}
+      - "user_address": ${ users[0].address.line_one(bare=True)}
+      - "user_name": ${users[0].name.full(middle='full')}
+      - "user_csz": ${users[0].address.line_two()}
+      - "user_phone": ${phone_number_formatted(users[0].phone_number)}
+      - "user_email": ${users[0].email if users[0].has_email_address == True else ""}
+      - "delivery_name_1": | 
+          % if delivery_parties[0].is_represented:
+          ${ delivery_parties[0].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[0].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[0].name.full(middle="full") }
+          % endif
+      - "delivery_address_1": ${delivery_parties[0].address.on_one_line(bare=True)}
+      - "delivery_email_address_1": ${delivery_parties[0].delivery_email}
+      - "delivery_date_1": ${delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method else ''}
+      - "delivery_efsp_1": ${ delivery_parties[0].efm_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_by_email_1": ${ delivery_parties[0].email_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_hand_1": ${delivery_parties[0].hand_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_mail_1": ${ delivery_parties[0].mail_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_time_1": ${format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method else ''}
+      - "delivery_am_1": ${True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_1": ${True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='PM' else False}
+      - "delivery_name_2": | 
+          % if delivery_parties[1].is_represented:
+          ${ delivery_parties[1].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[1].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[1].name.full(middle="full") }
+          % endif
+      - "delivery_address_2": ${delivery_parties[1].address.on_one_line(bare=True)}
+      - "delivery_efsp_2": ${ delivery_parties[1].efm_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_by_email_2": ${ delivery_parties[1].email_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_hand_2": ${delivery_parties[1].hand_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_mail_2": ${ delivery_parties[1].mail_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_email_address_2": ${delivery_parties[1].delivery_email}
+      - "delivery_date_2": ${delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method else ''}
+      - "delivery_time_2": ${format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method else ''}
+      - "delivery_am_2": ${True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_2": ${True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='PM' else False}
+      - "additional_delivery": ${ True if delivery_parties.number_gathered() > 2 else False}
+---
+attachment:
+  variable name: removal_order[i]
+  name: removal_order
+  filename: removal_order
+  skip undefined: True
+  editable: False
+  pdf template file: REF_Order.pdf
+  fields:
+      - "filing_county": ${ trial_court.address.county.upper() }
+      - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
+      - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
+      - "case_number": ${""}
+      - "unknown_occupants": ${unknown_occupants_check}
+---
+attachment:
+  variable name: notice[i]
+  name: notice
+  filename: notice
+  skip undefined: True
+  editable: False
+  pdf template file: MOT_Notice_of_Court_Date_for_Motion.pdf
+  fields:
+      - "filing_county": ${ trial_court.address.county.upper() }
+      - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
+      - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
+      - "case_number": ${""}
+      - "motion_title": ${"Remove Eviction Court File from Public Record"}
+      - "hearing_date": ${ hearing_date if (defined('hearing_date') and has_court_date) else '' }
+      - "hearing_time": ${ format_time(hearing_time, format='h:mm') if (defined('hearing_time') and has_court_date) else '' }
+      - "hearing_am": ${ True if (has_court_date and format_time(hearing_time, format='a')=='AM') else '' }
+      - "hearing_pm": ${ True if (has_court_date and format_time(hearing_time, format='a')=='PM') else '' }
+      - "hearing_courtroom": ${ courtroom if has_court_date else '' }
+      - "hearing_address": ${ courthouse_info }
+      - "hearing_phone": ${''}
+      - "hearing_website": ${''}
+      - "hearing_conference_info": ${''}
+      - "clerk_phone": ${ trial_court.phone }
+      - "clerk_website": ${ trial_court.website }
+      - "user_signature": ${ users[0].name.full(middle='full') if e_signature else ""}
+      - "user_address": ${ users[0].address.line_one(bare=True)}
+      - "user_name": ${users[0].name.full(middle='full')}
+      - "user_csz": ${users[0].address.line_two()}
+      - "user_phone": ${phone_number_formatted(users[0].phone_number)}
+      - "user_email": ${users[0].email if users[0].has_email_address == True else ""}
+      - "delivery_name_1": | 
+          % if delivery_parties[0].is_represented:
+          ${ delivery_parties[0].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[0].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[0].name.full(middle="full") }
+          % endif
+      - "delivery_address_1": ${delivery_parties[0].address.on_one_line(bare=True)}
+      - "delivery_email_address_1": ${delivery_parties[0].delivery_email}
+      - "delivery_efsp_1": ${ delivery_parties[0].efm_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_by_email_1": ${ delivery_parties[0].email_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_hand_1": ${delivery_parties[0].hand_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_mail_1": ${ delivery_parties[0].mail_delivery if delivery_parties[0].knows_delivery_method else '' }
+      - "delivery_date_1": ${delivery_parties[0].delivery_date if delivery_parties[0].knows_delivery_method else ''}
+      - "delivery_time_1": ${format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method else ''}
+      - "delivery_am_1": ${True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_1": ${True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='PM' else False}
+      - "delivery_name_2": | 
+          % if delivery_parties[1].is_represented:
+          ${ delivery_parties[1].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[1].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[1].name.full(middle="full") }
+          % endif
+      - "delivery_address_2": ${delivery_parties[1].address.on_one_line(bare=True)}
+      - "delivery_email_address_2": ${delivery_parties[1].delivery_email}
+      - "delivery_efsp_2": ${ delivery_parties[1].efm_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_by_email_2": ${ delivery_parties[1].email_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_hand_2": ${delivery_parties[1].hand_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_mail_2": ${ delivery_parties[1].mail_delivery if delivery_parties[1].knows_delivery_method else '' }
+      - "delivery_date_2": ${delivery_parties[1].delivery_date if delivery_parties[1].knows_delivery_method else ''}
+      - "delivery_time_2": ${format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method else ''}
+      - "delivery_am_2": ${True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_2": ${True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='PM' else False}
+      - "additional_delivery": ${ True if delivery_parties.number_gathered() > 2 else False}
+---
+attachment:
+  variable name: dummy_list[i].additional_proof[j]
+  name: dummy_list[i].additional_proof
+  filename: dummy_list[i].additional_proof
+  skip undefined: True
+  editable: False
+  pdf template file: CC_Additional_Proof_of_Delivery.pdf
+  fields:
+      - "filing_county": ${ trial_court.address.county.upper() }
+      - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
+      - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
+      - "case_number": ${""}
+      - "document_name": ${"Motion to Remove Eviction Court File from Public Record"}
+      - "user_signature": ${ users[0].name.full(middle='full') if e_signature else ""}
+      - "user_address": ${ users[0].address.line_one(bare=True)}
+      - "user_name": ${users[0].name.full(middle='full')}
+      - "user_csz": ${users[0].address.line_two()}
+      - "user_phone": ${phone_number_formatted(users[0].phone_number)}
+      - "user_email": ${users[0].email if users[0].has_email_address == True else ""}
+      - "delivery_name_1": | 
+          % if delivery_parties[i].is_represented:
+          ${ delivery_parties[i].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[i].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[i].name.full(middle="full") }
+          % endif
+      - "delivery_address_1": ${delivery_parties[i].address.on_one_line(bare=True)}
+      - "delivery_email_address_1": ${delivery_parties[i].delivery_email}
+      - "delivery_efsp_1": ${ delivery_parties[i].efm_delivery if delivery_parties[i].knows_delivery_method else '' }
+      - "delivery_by_email_1": ${ delivery_parties[i].email_delivery if delivery_parties[i].knows_delivery_method else '' }
+      - "delivery_hand_1": ${delivery_parties[i].hand_delivery if delivery_parties[i].knows_delivery_method else '' }
+      - "delivery_mail_1": ${ delivery_parties[i].mail_delivery if delivery_parties[i].knows_delivery_method else '' }
+      - "delivery_date_1": ${delivery_parties[i].delivery_date if delivery_parties[i].knows_delivery_method else ''}
+      - "delivery_time_1": ${format_time(delivery_parties[i].delivery_time, format='h:mm') if delivery_parties[i].knows_delivery_method else ''}
+      - "delivery_am_1": ${True if delivery_parties[i].knows_delivery_method and format_time(delivery_parties[i].delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_1": ${True if delivery_parties[i].knows_delivery_method and format_time(delivery_parties[i].delivery_time, format='a')=='PM' else False}
+      - "delivery_name_2": | 
+          % if delivery_parties[i+1].is_represented:
+          ${ delivery_parties[i+1].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[i+1].name.full(middle="full") })
+          % else:
+          ${ delivery_parties[i+1].name.full(middle="full") }
+          % endif
+      - "delivery_address_2": ${delivery_parties[i+1].address.on_one_line(bare=True)}
+      - "delivery_email_address_2": ${delivery_parties[i+1].delivery_email}
+      - "delivery_efsp_2": ${ delivery_parties[i+1].efm_delivery if delivery_parties[i+1].knows_delivery_method else '' }
+      - "delivery_by_email_2": ${ delivery_parties[i+1].email_delivery if delivery_parties[i+1].knows_delivery_method else '' }
+      - "delivery_hand_2": ${delivery_parties[i+1].hand_delivery if delivery_parties[i+1].knows_delivery_method else '' }
+      - "delivery_mail_2": ${ delivery_parties[i+1].mail_delivery if delivery_parties[i+1].knows_delivery_method else '' }
+      - "delivery_date_2": ${delivery_parties[i+1].delivery_date if delivery_parties[i+1].knows_delivery_method else ''}
+      - "delivery_time_2": ${format_time(delivery_parties[i+1].delivery_time, format='h:mm') if delivery_parties[i+1].knows_delivery_method else ''}
+      - "delivery_am_2": ${True if delivery_parties[i+1].knows_delivery_method and format_time(delivery_parties[i+1].delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_2": ${True if delivery_parties[i+1].knows_delivery_method and format_time(delivery_parties[i+1].delivery_time, format='a')=='PM' else False}
+---
+section: Motion details
+id: motion review screen
+event: section_motion
+question: |
+  Motion details
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: party_label
+    button: |
+      **Are you a tenant or a landlord?**
+      % if party_label == "defendant":
+      Tenant
+      % else:
+      Landlord
+      % endif
+  - Edit: 
+      - trial_court_index
+      - recompute:
+        - trial_court
+    button: |
+      **County where the *Eviction Notice* was filed:**
+      ${ trial_court.address.county }
+  - Edit: cook_district
+    button: |
+      **In which Cook County courthouse is your case?**
+      % if cook_district == "15":
+      First Municipal District, Daley Center, 50 W. Washington Street, Chicago
+      % elif cook_district == "16":
+      Second Municipal District, 5600 Old Orchard Road, Skokie
+      % elif cook_district == "17":
+      Third Municipal District, 2121 Euclid Avenue, Rolling Meadows
+      % elif cook_district == "18":
+      Fourth Municipal District, 1500 Maybrook Drive, Maywood
+      % elif cook_district == "19":
+      Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview
+      % elif cook_district == "20":
+      Sixth Municipal District, 16501 South Kedzie Parkway, Markham
+      % endif
+    show if: trial_court_index == -1 
+  - Edit: foreclosure
+    button: |
+      % if party_label == "defendant":
+      **Were you evicted because the building you were living in was foreclosed on?**
+      % else:
+      **Was the eviction filed because the building the defendant was living in foreclosed on?**
+      % endif
+      ${word(yesno(foreclosure))}
+  - Edit: sufficiency
+    button: |
+      % if party_label == "defendant":
+      **Did your landlord get the facts or law wrong in the eviction case?**
+      % else:
+      **Did you get the facts or law wrong in the eviction case?**
+      % endif
+      ${word(yesno(sufficiency))}
+    show if: not foreclosure
+  - Edit: fact_law
+    button: |
+       **The facts or law were wrong because...**
+       
+       % if fact_law['no_reason']:
+       * The landlord had no reason to file the eviction.
+       % endif
+       % if fact_law['not_served']:
+       * The tenant was not properly served with an eviction notice or summons and a copy of the eviction complaint.
+       % endif
+       % if fact_law['other']:
+       * ${other_fact_law_text}
+       % endif
+    show if: not foreclosure
+  - Edit: additional_details_fact_law
+    button: |
+      **Why were the facts or law wrong?**
+      ${additional_details_fact_law}
+    show if: not foreclosure
+  - Edit: interest_justice
+    button: |
+      **It is more important to keep the court file from being seen by the public than it is to allow the public to see it because...**
+      
+      % if interest_justice['harder']:
+      * The eviction record will make it harder to find housing, find a job, or get credit.
+      % endif
+      % if interest_justice['other']:
+      * ${other_interest_justice_text}
+      % endif
+    show if: not foreclosure
+  - Edit: additional_details_interest_justice
+    button: |
+      **Why is it in the interest of justice to remove this eviction from the public record?**
+      ${additional_details_interest_justice}
+    show if: not foreclosure
+---
+section: Notice and delivery
+id: delivery review screen
+event: section_delivery
+question: |
+  Notice and delivery
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in users:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in other_parties:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: unknown_occupants_check
+    button: |
+      **Was the Unknown Occupants box checked on the Eviction Complaint?**
+      ${word(yesno(unknown_occupants_check))}
+  - Edit: contacted_others
+    button: |
+      **Have you contacted the other parties about removing the eviction from the public record?**
+      ${word(yesno(contacted_others))}
+  - Edit: any_object
+    button: |
+      **Do any of the other parties object to removing the eviction from the public record?**
+      ${word(yesno(any_object))}
+    show if: contacted_others
+  - Edit: has_court_date
+    button: |
+      **Do you already have a court date for your motion from the clerk?**
+      ${ word(yesno(has_court_date)) }
+  - Edit: hearing_date
+    button: |
+      **Motion court date on:**
+      ${ hearing_date } at ${ format_time(hearing_time, "h:mm a") }
+    show if: has_court_date
+  - Edit: courtroom
+    button: |
+      **Courtroom:**
+      ${ courtroom }
+    show if: has_court_date
+---
+id: delivery party review
+continue button field: x.review_delivery
+generic object: ALIndividual
+question: |
+  Edit ${ x.name.full(middle="full") }'s information
+subquestion: |  
+  % if x == users[0]:
+  Edit your address, phone number, and email address in the [**About you**](${ url_action('section_about_you') }) section.
+  % else:
+  If you don't see lawyer, address, or delivery information, then it might not be entered yet. Continue the program to answer all the questions.
+  % endif
+review: 
+  - Edit: x.name.first
+    button: |
+      **Party name:**
+      ${ x.name.full(middle="full")  }
+  - Edit: x.is_represented
+    button: |
+      **Does ${ x.name.full(middle="full") } have a lawyer?**
+      % if x.is_represented is None:
+      I don't know
+      % else:
+      ${ word(yesno(x.is_represented)) }
+      % endif
+  - Edit: x.lawyer.name.first
+    button: |
+      **Lawyer name:**
+      ${ x.lawyer.name.full(middle="full") }
+    show if: x.is_represented
+  - Edit: x.address.address
+    button: |
+      % if x.is_represented == True:
+      **${ x.lawyer.name.full(middle="full") }'s address:**
+      % else:
+      **${ x.name.full(middle="full") }'s address:**
+      % endif
+      ${ x.address.on_one_line(bare=True) }
+  - Edit: x.knows_delivery_method
+    button: |
+      **Do you know how you will deliver your forms to them?**
+      ${ word(yesno(x.knows_delivery_method)) }
+  - Edit: x.hand_delivery
+    button: |
+      **Delivery by: (Edit to view and change details)**
+      
+      % if x.efm_delivery == True:
+        * E-filing system
+      % endif
+      % if x.email_delivery == True:
+        * Email (${x.delivery_email})
+      % endif
+      % if x.hand_delivery == True:
+        * Hand
+      % endif
+      % if x.mail_delivery == True:
+        * US mail or delivery company
+      % endif
+    show if: x.knows_delivery_method
+  - Edit: x.delivery_date
+    button: |
+      **Delivery on:**
+      ${ x.delivery_date } at ${ format_time(x.delivery_time, "h:mm a") }
+    show if: x.knows_delivery_method
+---
+id: users review
+continue button field: users.revisit
+question: |
+  Edit the ${ party_label }s
+subquestion: |
+  ${ users.table }
+
+  ${ users.add_action() }
+---
+table: users.table
+rows: users
+columns:
+  - Name: |
+      row_item.name.full(middle="full") if defined("row_item.name.first") else ""
+  - Party, lawyer, address, and delivery info: |
+      action_button_html(url_action(row_item.attr_name("review_delivery")), label="Edit", icon="pencil-alt")
+delete buttons: True
+confirm: True
+---
+id: other parties review
+continue button field: other_parties.revisit
+question: |
+  % if party_label == "plaintiff":
+    Edit the defendants
+  % elif party_label == "petitioner":
+    Edit the respondents
+  % elif party_label == "defendant":
+    Edit the plaintiffs
+  % else:
+    Edit the petitioners
+  % endif
+subquestion: |
+  ${ other_parties.table }
+
+  ${ other_parties.add_action() }
+---
+table: other_parties.table
+rows: other_parties
+columns:
+  - Name: |
+      row_item.name.full(middle="full") if defined("row_item.name.first") else ""
+  - Party, lawyer, address, and delivery info: |
+      action_button_html(url_action(row_item.attr_name("review_delivery")), label="Edit", icon="pencil-alt")
+delete buttons: True
+confirm: True
+---
+section: About you
+id: user review screen
+event: section_about_you
+question: |
+  About you
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: users[0].name.first
+    button: |
+      **Your name:**
+      ${ users[0].name.full(middle="full") }
+  - Edit: users[0].address.address
+    button: |
+      **Your address:**
+      ${ users[0].address.on_one_line(bare=True) }
+  - Edit: users[0].has_email_address
+    button: |
+      **Your contact information:**
+      % if users[0].phone_number != "" and users[0].has_email_address == True:
+      
+      * Phone number: ${phone_number_formatted(users[0].phone_number)}
+      * Email address: ${users[0].email}
+      % elif users[0].phone_number != "" and users[0].has_email_address == False:
+      ${phone_number_formatted(users[0].phone_number)}
+      % elif users[0].phone_number == "" and users[0].has_email_address == True:
+      ${users[0].email}
+      % endif
+  - Edit: e_signature
+    button: |
+      **Do you want to add your e-signature to your forms?**
+      ${ word(yesno(e_signature)) }
+---
+id: review screen
+event: review_answers
+question: |
+  Review screen
+subquestion: |
+  Edit your answers below.
+review: 
+  - Edit: party_label
+    button: |
+      **Are you a tenant or a landlord?**
+      % if party_label == "defendant":
+      Tenant
+      % else:
+      Landlord
+      % endif
+  - Edit: 
+      - trial_court_index
+      - recompute:
+        - trial_court
+    button: |
+      **County where the *Eviction Notice* was filed:**
+      ${ trial_court.address.county }
+  - Edit: cook_district
+    button: |
+      **In which Cook County courthouse is your case?**
+      % if cook_district == "15":
+      First Municipal District, Daley Center, 50 W. Washington Street, Chicago
+      % elif cook_district == "16":
+      Second Municipal District, 5600 Old Orchard Road, Skokie
+      % elif cook_district == "17":
+      Third Municipal District, 2121 Euclid Avenue, Rolling Meadows
+      % elif cook_district == "18":
+      Fourth Municipal District, 1500 Maybrook Drive, Maywood
+      % elif cook_district == "19":
+      Fifth Municipal District, 10220 S. 76th Avenue, Bridgeview
+      % elif cook_district == "20":
+      Sixth Municipal District, 16501 South Kedzie Parkway, Markham
+      % endif
+    show if: trial_court_index == -1 
+  - Edit: foreclosure
+    button: |
+      % if party_label == "defendant":
+      **Were you evicted because the building you were living in was foreclosed on?**
+      % else:
+      **Was the eviction filed because the building the defendant was living in foreclosed on?**
+      % endif
+      ${word(yesno(foreclosure))}
+  - Edit: sufficiency
+    button: |
+      % if party_label == "defendant":
+      **Did your landlord get the facts or law wrong in the eviction case?**
+      % else:
+      **Did you get the facts or law wrong in the eviction case?**
+      % endif
+      ${word(yesno(sufficiency))}
+    show if: not foreclosure
+  - Edit: fact_law
+    button: |
+       **The facts or law were wrong because...**
+       
+       % if fact_law['no_reason']:
+       * The landlord had no reason to file the eviction.
+       % endif
+       % if fact_law['not_served']:
+       * The tenant was not properly served with an eviction notice or summons and a copy of the eviction complaint.
+       % endif
+       % if fact_law['other']:
+       * ${other_fact_law_text}
+       % endif
+    show if: not foreclosure
+  - Edit: additional_details_fact_law
+    button: |
+      **Why were the facts or law wrong?**
+      ${additional_details_fact_law}
+    show if: not foreclosure
+  - Edit: interest_justice
+    button: |
+      **It is more important to keep the court file from being seen by the public than it is to allow the public to see it because...**
+      
+      % if interest_justice['harder']:
+      * The eviction record will make it harder to find housing, find a job, or get credit.
+      % endif
+      % if interest_justice['other']:
+      * ${other_interest_justice_text}
+      % endif
+    show if: not foreclosure
+  - Edit: additional_details_interest_justice
+    button: |
+      **Why is it in the interest of justice to remove this eviction from the public record?**
+      ${additional_details_interest_justice}
+    show if: not foreclosure
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in users:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in other_parties:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: unknown_occupants_check
+    button: |
+      **Was the Unknown Occupants box checked on the Eviction Complaint?**
+      ${word(yesno(unknown_occupants_check))}
+  - Edit: contacted_others
+    button: |
+      **Have you contacted the other parties about removing the eviction from the public record?**
+      ${word(yesno(contacted_others))}
+  - Edit: any_object
+    button: |
+      **Do any of the other parties object to removing the eviction from the public record?**
+      ${word(yesno(any_object))}
+    show if: contacted_others
+  - Edit: has_court_date
+    button: |
+      **Do you already have a court date for your motion from the clerk?**
+      ${ word(yesno(has_court_date)) }
+  - Edit: hearing_date
+    button: |
+      **Motion court date on:**
+      ${ hearing_date } at ${ format_time(hearing_time, "h:mm a") }
+    show if: has_court_date
+  - Edit: courtroom
+    button: |
+      **Courtroom:**
+      ${ courtroom }
+    show if: has_court_date
+  - Edit: users[0].name.first
+    button: |
+      **Your name:**
+      ${ users[0].name.full(middle="full") }
+  - Edit: users[0].address.address
+    button: |
+      **Your address:**
+      ${ users[0].address.on_one_line(bare=True) }
+  - Edit: users[0].has_email_address
+    button: |
+      **Your contact information:**
+      % if users[0].phone_number != "" and users[0].has_email_address == True:
+      
+      * Phone number: ${phone_number_formatted(users[0].phone_number)}
+      * Email address: ${users[0].email}
+      % elif users[0].phone_number != "" and users[0].has_email_address == False:
+      ${phone_number_formatted(users[0].phone_number)}
+      % elif users[0].phone_number == "" and users[0].has_email_address == True:
+      ${users[0].email}
+      % endif
+  - Edit: e_signature
+    button: |
+      **Do you want to add your e-signature to your forms?**
+      ${ word(yesno(e_signature)) }
