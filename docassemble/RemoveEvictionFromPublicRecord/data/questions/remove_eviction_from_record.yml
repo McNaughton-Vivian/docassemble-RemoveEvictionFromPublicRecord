@@ -1,5 +1,5 @@
 metadata:
-  title: Remove an Eviction from Public Record
+  title: Remove Eviction from Public Record
   short title: Remove Eviction from Record
   comment: This program helps you ask a judge to remove an eviction court file from the public record so it does not show up in a background check or credit report.
   authors:
@@ -18,9 +18,10 @@ objects:
   - other_parties: ALPeopleList.using(there_are_any=True)
   - other_parties[i].lawyer: ALIndividual
   - witness: ALIndividual
+  - filing: ALAddress
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
-  - dummy_list: ALPeopleList.using(there_are_any=True)
+  - additional_delivery_list: ALPeopleList.using(there_are_any=True)
   - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
 ---
 #Add the easy form url once created!
@@ -91,11 +92,9 @@ code: |
   users[0].address.address
   users[0].has_email_address
   e_signature
-  if delivery_parties.number_gathered() > 2:
-    dummy_list.there_are_any = True
-    dummy_list.gather()
-  else:
-    dummy_list.there_are_any = False
+  
+  make_additional_list
+  
   #debug_screen
   nav.set_section('section_download')
   seal_or_impound_info
@@ -104,20 +103,39 @@ code: |
   set_progress(100)
   get_docs_screen
 ---
+depends on:
+  - users[i].name.first
+  - users[i].name.middle
+  - users[i].name.last
+  - users[i].name.suffix
+  - other_parties[i].name.first
+  - other_parties[i].name.middle
+  - other_parties[i].name.last
+  - other_parties[i].name.suffix
 code: |
-  dummy_list[i].name.first = "This is"
-  dummy_list[i].name.last = "a workaround for a list comprehension limitation"
-  if i < (delivery_parties.number_gathered() - 1):
-    dummy_list.there_is_another = True
-  else:
-    dummy_list.there_is_another = False
+  additional_delivery_list.clear()
+  list_counter = 0
+  while list_counter < delivery_parties.number_gathered():
+    additional_delivery_list[list_counter].name.first = "This is a workaround"
+    additional_delivery_list[list_counter].name.last = "for a list comprehension limitation"
+    list_counter += 1
+
+  additional_delivery_list.there_is_another = False
+  make_additional_list = True
+---
+id: additional list debug
+continue button field: additional_delivery_list[i].debug
+question: |
+  Is it iterating at all?
+subquestion: |
+  This is the ${ordinal(i)} pass.
 ---
 id: debug screen
 continue button field: debug_screen
 question: |
   Debug
 subquestion: |
-  The length of the dummy list is ${dummy_list.number_gathered()}.
+  The length of the dummy list is ${additional_delivery_list.number_gathered()}.
   
   The length of the delivery parties list is ${delivery_parties.number_gathered()}.
   
@@ -127,13 +145,13 @@ subquestion: |
 ---
 id: welcome
 question: |
-  Remove an eviction from public record
+  Remove eviction from public record
 subquestion: |
-  Welcome to Illinois Legal Aid Online's **Remove an eviction from public record** Easy Form.
+  Welcome to Illinois Legal Aid Online's **Remove eviction from public record** Easy Form.
   
   This program helps you ask a judge to remove an eviction court file from the public record so it does not show up in a background check or credit report. This program makes a *Motion to Remove Eviction Court File from Public Record*.
   
-  To learn more, read ILAO's article about [**What happens if I have an eviction on my record?**](https://www.illinoislegalaid.org/legal-information/what-happens-if-i-have-eviction-my-record)
+  To learn more, read ILAO's article, [**What happens if I have an eviction on my record?**](https://www.illinoislegalaid.org/legal-information/what-happens-if-i-have-eviction-my-record)
 field: sees_nav_bar
 ---
 id: instructions
@@ -172,9 +190,9 @@ id: tenant or landlord
 question: |
   Are you the tenant or the landlord?
 subquestion: |
-  If you are listed as a defendant in the eviction order, you should click **Tenant**.
+  If you are listed as a defendant in the *Eviction Order*, you should click **Tenant**.
   
-  If you are listed as a plaintiff in the eviction order, you should click **Landlord**.
+  If you are listed as a plaintiff in the *Eviction Order*, you should click **Landlord**.
 field: party_label
 choices:
   - Tenant: defendant
@@ -189,7 +207,11 @@ fields:
 ---
 id: other parties object
 question: |
-  Do any of the other parties object to removing the eviction from the public record?
+  Have any of the other parties told you they object to removing the court file from the public record?
+subquestion: |
+  Only select **Yes** if they said they are going to fight removing your court file from the public record.
+  
+  If they have not said anything or if you do not know, select **No**.
 fields:
   - no label: any_object
     datatype: yesnoradio
@@ -401,23 +423,6 @@ fields:
   - "Anyone else?": other_parties.there_is_another
     datatype: yesnoradio
 ---
-code: |
-  def court_county_lookup(lowercase=False):
-    all_court_counties = court_list._load_courts()['address_county'].items()
-    filtered_courts = [(-1, "cook")] if lowercase else [(-1, "Cook")]
-    for court in all_court_counties:
-      if court[1] != "Cook":
-        court_name = court[1].lower() if lowercase else court[1]
-        filtered_courts.append((court[0],court_name))
-    return sorted( filtered_courts, key=lambda y: y[1])
----
-code: |
-  if trial_court_index == -1:
-    trial_court = court_list.as_court('trial_court', 15)
-    trial_court.address.county = "Cook"
-  else:
-    trial_court = court_list.as_court('trial_court', trial_court_index)
----
 depends on:
   - trial_court_index
   - cook_district
@@ -523,7 +528,7 @@ fields:
 ---
 reconsider: True
 code: |
-  delivery_parties = DAList("delivery_parties", elements = other_parties + users[1:])
+  delivery_parties = ALPeopleList("delivery_parties", elements = other_parties + users[1:])
 ---
 id: notice intro
 continue button field: notice_intro
@@ -539,12 +544,17 @@ subquestion: |
 id: trial court county
 continue button field: case_county
 question: |
-  In which county was the *Eviction Notice* filed?
+  Which county was the *Eviction Notice* filed in?
 fields:
   - no label: trial_court_index
     datatype: integer
     code: |
-      court_county_lookup()
+      ilao_court_county_lookup(court_list)
+validation code: |
+  if trial_court_index == "-1":
+    trial_court = court_list.as_court('trial_court', 15)
+  else:
+    trial_court = court_list.as_court('trial_court', trial_court_index)
 ---
 id: your contact information
 question: |
@@ -845,6 +855,9 @@ event: get_docs_screen
 question: |
   Download
 subquestion: |
+  Additional delivery list length: ${additional_delivery_list.number_gathered()}
+  
+  Delivery parties llist length: ${delivery_parties.number_gathered()}
   
   Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
 
@@ -883,12 +896,18 @@ content: |
 objects: 
   - removal_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
   - removal_motion: ALDocument.using(title="Motion to Remove Eviction from Public Record", filename="removal_motion.pdf", has_addendum=False)
-  - removal_order: ALDocument.using(title="Order on Motion to Remove Eviction from Pubic Record", filename="removal_order.pdf", has_addendum=False)
+  - removal_order: ALDocument.using(title="Order", filename="removal_order.pdf", has_addendum=False)
   - notice: ALDocument.using( title="Notice of Court Date for Motion", filename="notice.pdf", has_addendum=False)
-  - dummy_list[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
+  - additional_delivery_list[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
 ---
 objects:
-  - additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in dummy_list], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+  #- users_additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in users], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+  #- other_parties_additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in other_parties], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+  - additional_delivery_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in additional_delivery_list], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+---
+objects:
+  - motion_bundle: ALDocumentBundle.using(elements=[removal_motion, additional_delivery_bundle], title = "Motion to Remove Eviction from Public Record", filename="motion_bundle.pdf", has_addendum=False, enabled=True)
+  - notice_bundle: ALDocumentBundle.using(elements=[notice, additional_delivery_bundle], title = "Notice of Court Date for Motion", filename="notice_bundle.pdf", has_addendum=False, enabled=True)
 ---
 code: |
   removal_instructions.enabled = True
@@ -897,17 +916,33 @@ code: |
   notice.enabled = True
   
   additional_delivery_index = 0
-  while additional_delivery_index < dummy_list.number_gathered():
+  while additional_delivery_index < additional_delivery_list.number_gathered():
     if additional_delivery_index == 0 or additional_delivery_index == 1:
-      dummy_list[additional_delivery_index].additional_proof.enabled = False
+      additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
     elif (additional_delivery_index % 2) == 0:
-      dummy_list[additional_delivery_index].additional_proof.enabled = True
+      additional_delivery_list[additional_delivery_index].additional_proof.enabled = True
     else:
-      dummy_list[additional_delivery_index].additional_proof.enabled = False
+      additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
     additional_delivery_index += 1
+  #parties_on_motion_template = 0
+  #other_parties_proof_of_delivery_index = 0
+  #users_proof_of_delivery_index = 0
+  #
+  #while other_parties_proof_of_delivery_index < other_parties.number_gathered():
+  #  if parties_on_motion_template > 1:
+  #    parties_on_motion_template += 1
+  #    other_parties[other_parties_proof_of_delivery_index].additional_proof.enabled = False
+  #  elif (other_parties_proof_of_delivery_index % 2) == 0:
+  #    other_parties[other_parties_proof_of_delivery_index].additional_proof.enabled = True
+  #  else:
+  #    other_parties[other_parties_proof_of_delivery_index].additional_proof.enabled = False
+  #  other_parties_proof_of_delivery_index += 1
+  
+  
+  
 ---
 objects:
-  - al_user_bundle: ALDocumentBundle.using(elements=[removal_instructions, removal_motion, notice, additional_proof_bundle, removal_order], filename="motion_to_remove_eviction_from_public_record.pdf", title="All forms")
+  - al_user_bundle: ALDocumentBundle.using(elements=[removal_instructions, motion_bundle, notice_bundle, removal_order], filename="motion_to_remove_eviction_from_public_record.pdf", title="All forms")
   - al_court_bundle: ALDocumentBundle.using(elements=[removal_motion, notice, additional_proof_bundle, removal_order], filename="motion_to_remove_eviction_from_public_record.pdf", title="Motion to Remove Eviction from Public Record")
 ---
 attachment:
@@ -1067,9 +1102,9 @@ attachment:
       - "additional_delivery": ${ True if delivery_parties.number_gathered() > 2 else False}
 ---
 attachment:
-  variable name: dummy_list[i].additional_proof[j]
-  name: dummy_list[i].additional_proof
-  filename: dummy_list[i].additional_proof
+  variable name: additional_delivery_list[i].additional_proof[j]
+  name: additional_delivery_list[i].additional_proof
+  filename: additional_delivery_list[i].additional_proof
   skip undefined: True
   editable: False
   pdf template file: CC_Additional_Proof_of_Delivery.pdf
