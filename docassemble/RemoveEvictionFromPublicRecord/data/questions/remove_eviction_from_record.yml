@@ -20,8 +20,8 @@ objects:
   - witness: ALIndividual
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
-  - dummy_list: ALPeopleList.using(there_are_any=True)
   - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
+  #- dummy_list: ALPeopleList.using(there_are_any=True)
 ---
 #Add the easy form url once created!
 code: |
@@ -91,12 +91,13 @@ code: |
   users[0].address.address
   users[0].has_email_address
   e_signature
-  if delivery_parties.number_gathered() > 2:
-    dummy_list.there_are_any = True
-    dummy_list.gather()
-  else:
-    dummy_list.there_are_any = False
+  #if delivery_parties.number_gathered() > 2:
+  #  dummy_list.there_are_any = True
+  #  dummy_list.gather()
+  #else:
+  #  dummy_list.there_are_any = False
   #debug_screen
+  build_delivery_proof
   nav.set_section('section_download')
   seal_or_impound_info
   if party_label == "defendant":
@@ -104,26 +105,26 @@ code: |
   set_progress(100)
   get_docs_screen
 ---
-code: |
-  dummy_list[i].name.first = "This is"
-  dummy_list[i].name.last = "a workaround for a list comprehension limitation"
-  if i < (delivery_parties.number_gathered() - 1):
-    dummy_list.there_is_another = True
-  else:
-    dummy_list.there_is_another = False
+#code: |
+#  dummy_list[i].name.first = "This is"
+#  dummy_list[i].name.last = "a workaround for a list comprehension limitation"
+#  if i < (delivery_parties.number_gathered() - 1):
+#    dummy_list.there_is_another = True
+#  else:
+#    dummy_list.there_is_another = False
 ---
-id: debug screen
-continue button field: debug_screen
-question: |
-  Debug
-subquestion: |
-  The length of the dummy list is ${dummy_list.number_gathered()}.
-  
-  The length of the delivery parties list is ${delivery_parties.number_gathered()}.
-  
-  The length of the users is ${users.number_gathered()}. This includes the program user.
-  
-  The length of the other parties list is ${other_parties.number_gathered()}.
+#id: debug screen
+#continue button field: debug_screen
+#question: |
+#  Debug
+#subquestion: |
+#  The length of the dummy list is ${dummy_list.number_gathered()}.
+#  
+#  The length of the delivery parties list is ${delivery_parties.number_gathered()}.
+#  
+#  The length of the users is ${users.number_gathered()}. This includes the program user.
+#  
+#  The length of the other parties list is ${other_parties.number_gathered()}.
 ---
 id: welcome
 question: |
@@ -885,26 +886,50 @@ objects:
   - removal_motion: ALDocument.using(title="Motion to Remove Eviction from Public Record", filename="removal_motion.pdf", has_addendum=False)
   - removal_order: ALDocument.using(title="Order on Motion to Remove Eviction from Pubic Record", filename="removal_order.pdf", has_addendum=False)
   - notice: ALDocument.using( title="Notice of Court Date for Motion", filename="notice.pdf", has_addendum=False)
-  - dummy_list[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
+  - delivery_parties[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
+  - users[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
+  - other_parties[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
 ---
 objects:
-  - additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in dummy_list], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+  - additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in delivery_parties], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+  #- additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in dummy_list], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
 ---
+reconsider: True
 code: |
   removal_instructions.enabled = True
   removal_motion.enabled = True
   removal_order.enabled = True
   notice.enabled = True
-  
-  additional_delivery_index = 0
-  while additional_delivery_index < dummy_list.number_gathered():
-    if additional_delivery_index == 0 or additional_delivery_index == 1:
-      dummy_list[additional_delivery_index].additional_proof.enabled = False
-    elif (additional_delivery_index % 2) == 0:
-      dummy_list[additional_delivery_index].additional_proof.enabled = True
+
+  for index, party in enumerate(delivery_parties):
+    if index == 0 or index == 1:
+      party.additional_proof.enabled = False
+    elif (index % 2) == 0:
+      party.additional_proof.enabled = True
     else:
-      dummy_list[additional_delivery_index].additional_proof.enabled = False
-    additional_delivery_index += 1
+      party.additional_proof.enabled = False
+  
+  build_delivery_proof = True
+---  
+  #additional_delivery_index = 0
+  #while additional_delivery_index < len(delivery_parties.elements):
+  #  if additional_delivery_index == 0 or additional_delivery_index == 1:
+  #    delivery_parties[additional_delivery_index].additional_proof.enabled = False
+  #  elif (additional_delivery_index % 2) == 0:
+  #    delivery_parties[additional_delivery_index].additional_proof.enabled = True
+  #  else:
+  #    delivery_parties[additional_delivery_index].additional_proof.enabled = False
+  #  additional_delivery_index += 1
+
+  #additional_delivery_index = 0
+  #while additional_delivery_index < dummy_list.number_gathered():
+  #  if additional_delivery_index == 0 or additional_delivery_index == 1:
+  #    dummy_list[additional_delivery_index].additional_proof.enabled = False
+  #  elif (additional_delivery_index % 2) == 0:
+  #    dummy_list[additional_delivery_index].additional_proof.enabled = True
+  #  else:
+  #    dummy_list[additional_delivery_index].additional_proof.enabled = False
+  #  additional_delivery_index += 1
 ---
 objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[removal_instructions, removal_motion, notice, additional_proof_bundle, removal_order], filename="motion_to_remove_eviction_from_public_record.pdf", title="All forms")
@@ -1067,9 +1092,9 @@ attachment:
       - "additional_delivery": ${ True if delivery_parties.number_gathered() > 2 else False}
 ---
 attachment:
-  variable name: dummy_list[i].additional_proof[j]
-  name: dummy_list[i].additional_proof
-  filename: dummy_list[i].additional_proof
+  variable name: delivery_parties[i].additional_proof[j]
+  name: additional_proof
+  filename: additional_proof
   skip undefined: True
   editable: False
   pdf template file: CC_Additional_Proof_of_Delivery.pdf
