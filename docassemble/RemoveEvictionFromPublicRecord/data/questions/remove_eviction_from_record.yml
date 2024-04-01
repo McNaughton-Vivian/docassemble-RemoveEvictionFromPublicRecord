@@ -114,11 +114,14 @@ depends on:
   - other_parties[i].name.suffix
 code: |
   additional_delivery_list.clear()
-  list_counter = 0
-  while list_counter < delivery_parties.number_gathered():
-    additional_delivery_list[list_counter].name.first = "This is a workaround"
-    additional_delivery_list[list_counter].name.last = "for a list comprehension limitation"
-    list_counter += 1
+  #list_counter = 0
+  #while list_counter < delivery_parties.number_gathered():
+  #  additional_delivery_list[list_counter].name.first = "This is a workaround"
+  #  additional_delivery_list[list_counter].name.last = "for a list comprehension limitation"
+  #  list_counter += 1
+  for index, party in enumerate(delivery_parties):
+    additional_delivery_list[index].name.first = "This is a workaround"
+    additional_delivery_list[index].name.last = "for a list comprehension limitation"
 
   additional_delivery_list.there_is_another = False
   make_additional_list = True
@@ -855,10 +858,6 @@ event: get_docs_screen
 question: |
   Download
 subquestion: |
-  Additional delivery list length: ${additional_delivery_list.number_gathered()}
-  
-  Delivery parties llist length: ${delivery_parties.number_gathered()}
-  
   Your forms are ready. View and download your forms below. Click **Make changes** to fix any mistakes.
 
   This program does not file your Motion with the court or deliver it to other parties in your case. You will need to do this yourself. Learn about more about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/efileil/).
@@ -915,15 +914,24 @@ code: |
   removal_order.enabled = True
   notice.enabled = True
   
-  additional_delivery_index = 0
-  while additional_delivery_index < additional_delivery_list.number_gathered():
-    if additional_delivery_index == 0 or additional_delivery_index == 1:
-      additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
-    elif (additional_delivery_index % 2) == 0:
-      additional_delivery_list[additional_delivery_index].additional_proof.enabled = True
+  #additional_delivery_index = 0
+  #while additional_delivery_index < additional_delivery_list.number_gathered():
+  #  if additional_delivery_index == 0 or additional_delivery_index == 1:
+  #    additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
+  #  elif (additional_delivery_index % 2) == 0:
+  #    additional_delivery_list[additional_delivery_index].additional_proof.enabled = True
+  #  else:
+  #    additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
+  #  additional_delivery_index += 1
+  
+  for index, party in enumerate(additional_delivery_list):
+    if index == 0 or index == 1:
+      additional_delivery_list[index].additional_proof.enabled = False
+    elif (index % 2) == 0:
+      additional_delivery_list[index].additional_proof.enabled = True
     else:
-      additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
-    additional_delivery_index += 1
+      additional_delivery_list[index].additional_proof.enabled = False
+
   #parties_on_motion_template = 0
   #other_parties_proof_of_delivery_index = 0
   #users_proof_of_delivery_index = 0
