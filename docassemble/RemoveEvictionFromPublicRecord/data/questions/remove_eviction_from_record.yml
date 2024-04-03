@@ -21,7 +21,6 @@ objects:
   - filing: ALAddress
   - delivery_parties: ALPeopleList.using(there_are_any=True)
   - delivery_parties[i].lawyer: ALIndividual
-  - additional_delivery_list: ALPeopleList.using(there_are_any=True)
   - court_list: ALCourtLoader.using(file_name='docassemble.ILAO:data/sources/il_courts.xlsx')
 ---
 #Add the easy form url once created!
@@ -93,58 +92,14 @@ code: |
   users[0].has_email_address
   e_signature
   
-  make_additional_list
-  
-  #debug_screen
   nav.set_section('section_download')
   seal_or_impound_info
   if party_label == "defendant":
     your_rights
   set_progress(100)
+  
+  refresh_delivery_bundle
   get_docs_screen
----
-depends on:
-  - users[i].name.first
-  - users[i].name.middle
-  - users[i].name.last
-  - users[i].name.suffix
-  - other_parties[i].name.first
-  - other_parties[i].name.middle
-  - other_parties[i].name.last
-  - other_parties[i].name.suffix
-code: |
-  additional_delivery_list.clear()
-  #list_counter = 0
-  #while list_counter < delivery_parties.number_gathered():
-  #  additional_delivery_list[list_counter].name.first = "This is a workaround"
-  #  additional_delivery_list[list_counter].name.last = "for a list comprehension limitation"
-  #  list_counter += 1
-  for index, party in enumerate(delivery_parties):
-    additional_delivery_list[index].name.first = "This is a workaround"
-    additional_delivery_list[index].name.last = "for a list comprehension limitation"
-
-  additional_delivery_list.there_is_another = False
-  make_additional_list = True
----
-id: additional list debug
-continue button field: additional_delivery_list[i].debug
-question: |
-  Is it iterating at all?
-subquestion: |
-  This is the ${ordinal(i)} pass.
----
-id: debug screen
-continue button field: debug_screen
-question: |
-  Debug
-subquestion: |
-  The length of the dummy list is ${additional_delivery_list.number_gathered()}.
-  
-  The length of the delivery parties list is ${delivery_parties.number_gathered()}.
-  
-  The length of the users is ${users.number_gathered()}. This includes the program user.
-  
-  The length of the other parties list is ${other_parties.number_gathered()}.
 ---
 id: welcome
 question: |
@@ -866,7 +821,7 @@ subquestion: |
   
   ${ al_user_bundle.download_list_html() }
 
-  &nbsp;
+  [NEWLINE]
 
   ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
 
@@ -897,57 +852,51 @@ objects:
   - removal_motion: ALDocument.using(title="Motion to Remove Eviction from Public Record", filename="removal_motion.pdf", has_addendum=False)
   - removal_order: ALDocument.using(title="Order", filename="removal_order.pdf", has_addendum=False)
   - notice: ALDocument.using( title="Notice of Court Date for Motion", filename="notice.pdf", has_addendum=False)
-  - additional_delivery_list[i].additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
+---
+#This needs to be a generic object because the delivery parties list entries point to entries in other lists.
+generic object: ALIndividual
+objects:
+  - x.additional_proof: ALDocument.using(title="Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False)
 ---
 objects:
-  #- users_additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in users], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
-  #- other_parties_additional_proof_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in other_parties], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
-  - additional_delivery_bundle: ALDocumentBundle.using(elements=[item.additional_proof for item in additional_delivery_list], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+  - additional_delivery_bundle: ALDocumentBundle.using(elements=[], title= "Additional Proof of Delivery", filename="additional_proof_of_delivery.pdf", has_addendum=False, enabled=True)
+---
+reconsider: True
+code: |
+  #deliveries_to_bundle will be used as the elements for the additional_delivery_bundle object created in the above block. This is its initial definition
+  deliveries_to_bundle = []
+
+  #enumerate allows us to reference the index in a for loop. This for loop appends each additional proof template to the deliveries_to_bundle object and sets the enabled trait for those templates.
+  for index, party in enumerate(delivery_parties):
+    #If the index is 0 or 1, the party is included on the motion and notice forms, and thus does not need to be added to additional proof of delivery
+    if index == 0 or index == 1:
+      party.additional_proof.enabled = False
+    #Because the additional delivery form can list two parties, we don't need a form for each delivery party beyond the first two. Instead, we only append party.additional_proof if party's index is an even number, as a party with an odd number will be included on the previous party.additional_proof
+    elif (index % 2) == 0:
+      party.additional_proof.enabled = True
+      #We only need to append the party.additional proof objects that we include.
+      deliveries_to_bundle.append(party.additional_proof)
+      #This if statement prevents an out of index range error. If we created the party.second_person without it, an out of index range would occur if party is the last entry in the delivery_parties list.
+      if (index + 1) < delivery_parties.number_gathered():
+        #This line creates an object associated with party that points to the item immediately after party in delivery_parties. Why? So we can refer to it in the party.additional_delivery attachment block even though there we can't refer to the index as we do in this for loop.
+        party.second_person = delivery_parties[index + 1]
+    #This else statement should catch all parties with an index divisible by 2, excluding index 0.
+    else:
+      party.additional_proof.enabled = False
+ 
+  additional_delivery_bundle.elements = deliveries_to_bundle
+  refresh_delivery_bundle = True
 ---
 objects:
   - motion_bundle: ALDocumentBundle.using(elements=[removal_motion, additional_delivery_bundle], title = "Motion to Remove Eviction from Public Record", filename="motion_bundle.pdf", has_addendum=False, enabled=True)
   - notice_bundle: ALDocumentBundle.using(elements=[notice, additional_delivery_bundle], title = "Notice of Court Date for Motion", filename="notice_bundle.pdf", has_addendum=False, enabled=True)
 ---
+#the enabled trait of the additional delivery templates is handled in the code block that creates the additional delivery bundle's elements.
 code: |
   removal_instructions.enabled = True
   removal_motion.enabled = True
   removal_order.enabled = True
   notice.enabled = True
-  
-  #additional_delivery_index = 0
-  #while additional_delivery_index < additional_delivery_list.number_gathered():
-  #  if additional_delivery_index == 0 or additional_delivery_index == 1:
-  #    additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
-  #  elif (additional_delivery_index % 2) == 0:
-  #    additional_delivery_list[additional_delivery_index].additional_proof.enabled = True
-  #  else:
-  #    additional_delivery_list[additional_delivery_index].additional_proof.enabled = False
-  #  additional_delivery_index += 1
-  
-  for index, party in enumerate(additional_delivery_list):
-    if index == 0 or index == 1:
-      additional_delivery_list[index].additional_proof.enabled = False
-    elif (index % 2) == 0:
-      additional_delivery_list[index].additional_proof.enabled = True
-    else:
-      additional_delivery_list[index].additional_proof.enabled = False
-
-  #parties_on_motion_template = 0
-  #other_parties_proof_of_delivery_index = 0
-  #users_proof_of_delivery_index = 0
-  #
-  #while other_parties_proof_of_delivery_index < other_parties.number_gathered():
-  #  if parties_on_motion_template > 1:
-  #    parties_on_motion_template += 1
-  #    other_parties[other_parties_proof_of_delivery_index].additional_proof.enabled = False
-  #  elif (other_parties_proof_of_delivery_index % 2) == 0:
-  #    other_parties[other_parties_proof_of_delivery_index].additional_proof.enabled = True
-  #  else:
-  #    other_parties[other_parties_proof_of_delivery_index].additional_proof.enabled = False
-  #  other_parties_proof_of_delivery_index += 1
-  
-  
-  
 ---
 objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[removal_instructions, motion_bundle, notice_bundle, removal_order], filename="motion_to_remove_eviction_from_public_record.pdf", title="All forms")
@@ -1109,10 +1058,13 @@ attachment:
       - "delivery_pm_2": ${True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='PM' else False}
       - "additional_delivery": ${ True if delivery_parties.number_gathered() > 2 else False}
 ---
+#This needs to be a generic object. Otherwise, we would need two attachment blocks: one for users[i] and another for other_parties[i].
+#When you need to refer to delivery_parties[i], use x. When you need to refer to delivery_parties[i+1], use x.second_person.
+generic object: ALIndividual
 attachment:
-  variable name: additional_delivery_list[i].additional_proof[j]
-  name: additional_delivery_list[i].additional_proof
-  filename: additional_delivery_list[i].additional_proof
+  variable name: x.additional_proof[i]
+  name: additional_proof
+  filename: additional_proof
   skip undefined: True
   editable: False
   pdf template file: CC_Additional_Proof_of_Delivery.pdf
@@ -1129,37 +1081,37 @@ attachment:
       - "user_phone": ${phone_number_formatted(users[0].phone_number)}
       - "user_email": ${users[0].email if users[0].has_email_address == True else ""}
       - "delivery_name_1": | 
-          % if delivery_parties[i].is_represented:
-          ${ delivery_parties[i].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[i].name.full(middle="full") })
+          % if x.is_represented:
+          ${ x.lawyer.name.full(middle="full") }, (lawyer for ${ x.name.full(middle="full") })
           % else:
-          ${ delivery_parties[i].name.full(middle="full") }
+          ${ x.name.full(middle="full") }
           % endif
-      - "delivery_address_1": ${delivery_parties[i].address.on_one_line(bare=True)}
-      - "delivery_email_address_1": ${delivery_parties[i].delivery_email}
-      - "delivery_efsp_1": ${ delivery_parties[i].efm_delivery if delivery_parties[i].knows_delivery_method else '' }
-      - "delivery_by_email_1": ${ delivery_parties[i].email_delivery if delivery_parties[i].knows_delivery_method else '' }
-      - "delivery_hand_1": ${delivery_parties[i].hand_delivery if delivery_parties[i].knows_delivery_method else '' }
-      - "delivery_mail_1": ${ delivery_parties[i].mail_delivery if delivery_parties[i].knows_delivery_method else '' }
-      - "delivery_date_1": ${delivery_parties[i].delivery_date if delivery_parties[i].knows_delivery_method else ''}
-      - "delivery_time_1": ${format_time(delivery_parties[i].delivery_time, format='h:mm') if delivery_parties[i].knows_delivery_method else ''}
-      - "delivery_am_1": ${True if delivery_parties[i].knows_delivery_method and format_time(delivery_parties[i].delivery_time, format='a')=='AM' else False}
-      - "delivery_pm_1": ${True if delivery_parties[i].knows_delivery_method and format_time(delivery_parties[i].delivery_time, format='a')=='PM' else False}
+      - "delivery_address_1": ${x.address.on_one_line(bare=True)}
+      - "delivery_email_address_1": ${x.delivery_email}
+      - "delivery_efsp_1": ${ x.efm_delivery if x.knows_delivery_method else '' }
+      - "delivery_by_email_1": ${ x.email_delivery if x.knows_delivery_method else '' }
+      - "delivery_hand_1": ${x.hand_delivery if x.knows_delivery_method else '' }
+      - "delivery_mail_1": ${ x.mail_delivery if x.knows_delivery_method else '' }
+      - "delivery_date_1": ${x.delivery_date if x.knows_delivery_method else ''}
+      - "delivery_time_1": ${format_time(x.delivery_time, format='h:mm') if x.knows_delivery_method else ''}
+      - "delivery_am_1": ${True if x.knows_delivery_method and format_time(x.delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_1": ${True if x.knows_delivery_method and format_time(x.delivery_time, format='a')=='PM' else False}
       - "delivery_name_2": | 
-          % if delivery_parties[i+1].is_represented:
-          ${ delivery_parties[i+1].lawyer.name.full(middle="full") }, (lawyer for ${ delivery_parties[i+1].name.full(middle="full") })
+          % if x.second_person.is_represented:
+          ${ x.second_person.lawyer.name.full(middle="full") }, (lawyer for ${ x.second_person.name.full(middle="full") })
           % else:
-          ${ delivery_parties[i+1].name.full(middle="full") }
+          ${ x.second_person.name.full(middle="full") }
           % endif
-      - "delivery_address_2": ${delivery_parties[i+1].address.on_one_line(bare=True)}
-      - "delivery_email_address_2": ${delivery_parties[i+1].delivery_email}
-      - "delivery_efsp_2": ${ delivery_parties[i+1].efm_delivery if delivery_parties[i+1].knows_delivery_method else '' }
-      - "delivery_by_email_2": ${ delivery_parties[i+1].email_delivery if delivery_parties[i+1].knows_delivery_method else '' }
-      - "delivery_hand_2": ${delivery_parties[i+1].hand_delivery if delivery_parties[i+1].knows_delivery_method else '' }
-      - "delivery_mail_2": ${ delivery_parties[i+1].mail_delivery if delivery_parties[i+1].knows_delivery_method else '' }
-      - "delivery_date_2": ${delivery_parties[i+1].delivery_date if delivery_parties[i+1].knows_delivery_method else ''}
-      - "delivery_time_2": ${format_time(delivery_parties[i+1].delivery_time, format='h:mm') if delivery_parties[i+1].knows_delivery_method else ''}
-      - "delivery_am_2": ${True if delivery_parties[i+1].knows_delivery_method and format_time(delivery_parties[i+1].delivery_time, format='a')=='AM' else False}
-      - "delivery_pm_2": ${True if delivery_parties[i+1].knows_delivery_method and format_time(delivery_parties[i+1].delivery_time, format='a')=='PM' else False}
+      - "delivery_address_2": ${x.second_person.address.on_one_line(bare=True)}
+      - "delivery_email_address_2": ${x.second_person.delivery_email}
+      - "delivery_efsp_2": ${ x.second_person.efm_delivery if x.second_person.knows_delivery_method else '' }
+      - "delivery_by_email_2": ${ x.second_person.email_delivery if x.second_person.knows_delivery_method else '' }
+      - "delivery_hand_2": ${x.second_person.hand_delivery if x.second_person.knows_delivery_method else '' }
+      - "delivery_mail_2": ${ x.second_person.mail_delivery if x.second_person.knows_delivery_method else '' }
+      - "delivery_date_2": ${x.second_person.delivery_date if x.second_person.knows_delivery_method else ''}
+      - "delivery_time_2": ${format_time(x.second_person.delivery_time, format='h:mm') if x.second_person.knows_delivery_method else ''}
+      - "delivery_am_2": ${True if x.second_person.knows_delivery_method and format_time(x.second_person.delivery_time, format='a')=='AM' else False}
+      - "delivery_pm_2": ${True if x.second_person.knows_delivery_method and format_time(x.second_person.delivery_time, format='a')=='PM' else False}
 ---
 section: Motion details
 id: motion review screen
