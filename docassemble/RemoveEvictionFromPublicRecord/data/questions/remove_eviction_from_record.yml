@@ -33,9 +33,9 @@ code: |
 # Road map
 sections:
   - section_intro: Start
+  - section_case: Case info
   - section_motion: Motion details
   - section_delivery: Notice and delivery
-  - section_about_you: About you
   - section_download: Download  
 ---
 # interview order block
@@ -50,11 +50,23 @@ code: |
   whats_next
   accept_terms
   
-  nav.set_section('section_motion')
+  nav.set_section('section_case')
   party_label
   trial_court_index
+  case_number
+  users.gather()
   set_progress(20)
+  users[0].address.address
+  users[0].has_email_address
+  other_parties.gather()
+  unknown_occupants_check
+  
+  nav.set_section('section_motion') 
+  if contacted_others == True:
+    any_object
+  set_progress(40)
   if foreclosure == False:
+    sufficiency_info
     if sufficiency == False:
       no_reason_kickout
     fact_law
@@ -63,14 +75,9 @@ code: |
     additional_details_interest_justice
     
   nav.set_section('section_delivery')
-  set_progress(40)
-  users.gather()
-  other_parties.gather()
-  unknown_occupants_check
-  if contacted_others == True:
-    any_object
-  notice_intro
   set_progress(60)
+  notice_intro
+  
   if has_court_date:
     hearing_date
   delivery_intro
@@ -81,15 +88,12 @@ code: |
     if person.knows_delivery_method:
       person.mail_delivery
       person.delivery_date
-  set_progress(80)
+  
   for person in delivery_parties:
     if person.knows_delivery_method == False or person.hand_delivery == True:
       hand_delivery_info
-
-  courthouse_info
-  nav.set_section('section_about_you')
-  users[0].address.address
-  users[0].has_email_address
+  set_progress(80)
+  courthouse_info  
   e_signature
   
   nav.set_section('section_download')
@@ -159,6 +163,10 @@ choices:
 id: contact other parties
 question: |
   Have you contacted the other parties about removing the eviction from the public record?
+subquestion: |
+  It may be helpful to your motion if the parties have agreed to remove the eviction court file from the public record. 
+
+  An agreement is not required. You can ask the judge even if there is no agreement.
 fields:
   - no label: contacted_others
     datatype: yesnoradio
@@ -185,12 +193,38 @@ fields:
   - no label: foreclosure
     datatype: yesnoradio
 ---
+id: sufficiency info
+continue button field: sufficiency_info
+question: |
+  Removing an eviction without a foreclosure
+subquestion: |
+  % if party_label == "defendant":
+  An eviction can still be removed from the public record even if the building you were living in was not foreclosed on. The eviction court file **may** be removed if:
+  % else:
+  An eviction can still be removed from the public record even if the building the defendant was living in was not foreclosed on. The eviction court file **may** be removed if:
+  % endif
+  
+  * The landlord made a mistake in filing the eviction, and
+  * It is more important to keep the eviction record from the public than letting the public see it.
+  
+  The judge will decide whether to remove the eviction from the public record.
+  
+  ${collapse_template(about_mistake)}
+---
+template: about_mistake
+subject: |
+  **What does "mistake" mean here?**
+content: |
+  A **mistake** in filing the eviction would mean that the landlord got the facts or the law wrong in the eviction case.
+  
+  For example, the landlord may not have had areason to file the eviction, or the tenant may not have been properly served.
+---
 id: sufficiency check
 question: |
   % if party_label == "defendant":
-  Did your landlord get the facts or law wrong in the eviction case?
+  Did your landlord make a mistake in filing the eviction?
   % else:
-  Did you get the facts or law wrong in the eviction case?
+  Did you make a mistake in filing the eviction?
   % endif
 subquestion: |
   % if party_label == "defendant":
@@ -221,6 +255,8 @@ buttons:
 id: fact law error
 question: |
   How were the facts or law wrong?
+subquestion: |
+  You will be able to explain your answer and give details on the next screen.
 fields:
   - The facts or law were wrong because...: fact_law
     datatype: checkboxes
@@ -232,7 +268,7 @@ fields:
   - Other reason: other_fact_law_text
     input type: area
     rows: 2
-    maxlength: 200
+    maxlength: 112
     show if: 
       variable: fact_law['other'] 
       is: True
@@ -256,13 +292,18 @@ subquestion: |
   Please provide details explaining your answer.
 fields:
   - Details: additional_details_fact_law
+    required: False
     input type: area
-    rows: 4
-    maxlength: 500
+    rows: 5
+    maxlength: 300
 ---
 id: interest of justice
 question: |
-  How is it in the interest of justice to remove this eviction from the public record?
+  What makes it fair to remove this eviction from the public record?
+subquestion: |
+  Most court cases are kept in the public record. Sometimes it is unfair to the parties in a case to keep the court file open to the public. The law requires you give reasons why it is important to keep the eviction court file out of the public record.
+  
+  You will be able to explain your answer and give details on the next screen.
 fields:
   - It is more important to keep the court file from being seen by the public than it is to allow the public to see it because...: interest_justice
     datatype: checkboxes
@@ -273,14 +314,14 @@ fields:
   - Other reason: other_interest_justice_text
     input type: area
     rows: 2
-    maxlength: 200
+    maxlength: 168
     show if: 
       variable: interest_justice['other'] 
       is: True
 ---
 id: additional details fact law
 question: |
-  Why is it in the interest of justice to remove this eviction from the public record?
+  Why is it fair to remove this eviction from the public record?
 subquestion: |
   You said it was in the interest of justice to remove this eviction from the public record because:
   
@@ -294,9 +335,10 @@ subquestion: |
   Please provide details explaining your answer.
 fields:
   - Details: additional_details_interest_justice
+    required: False
     input type: area
-    rows: 4
-    maxlength: 500
+    rows: 6
+    maxlength: 350
 ---
 id: unknown occupants check
 question: |
@@ -421,6 +463,26 @@ subject: |
   **What if I am not sure?**
 content: |  
   Visit **[Illinois Court Help](https://www.ilcourthelp.gov/)**, or you can call or text (833) 411-1121 for assistance.
+---
+id: case number
+question: |
+  What is the case number?
+subquestion: |
+  ${ collapse_template(case_number_help) }  
+fields:
+  - Case number: case_number
+---
+template: case_number_help
+subject: |
+  **Learn about case numbers**
+content: |  
+  The case number should be on your court papers. Look at the Complaint or Eviction Order, or the Summons if you received one. It is usually in the top-right part of the first page.
+  
+  If you started the case, the court clerk should have given you the case number.
+  
+  In this example, the case number is **2022 EXAMPLE 123**.
+  
+  [FILE case_number_example.png, 100%, Summons form showing case number]
 ---
 id: delivery intro
 continue button field: delivery_intro
@@ -799,10 +861,10 @@ subquestion: |
   
   You can learn more from the instructions page that comes with your forms.
 ---
-id: your rights
+id: your rights background checks
 continue button field: your_rights
 question: |
-  Your rights
+  Background checks
 subquestion: |
   If you remove an eviction from the public record but it shows up later in a background check, your rights may have been violated. If that happens, you may want to speak to a lawyer or a consumer rights advocate.
   
@@ -850,7 +912,7 @@ content: |
 objects: 
   - removal_instructions: ALDocument.using(title="Instructions", filename="instructions.pdf", has_addendum=False)
   - removal_motion: ALDocument.using(title="Motion to Remove Eviction from Public Record", filename="removal_motion.pdf", has_addendum=False)
-  - removal_order: ALDocument.using(title="Order", filename="removal_order.pdf", has_addendum=False)
+  - removal_order: ALDocument.using(title="Order", filename="order.pdf", has_addendum=False)
   - notice: ALDocument.using( title="Notice of Court Date for Motion", filename="notice.pdf", has_addendum=False)
 ---
 #This needs to be a generic object because the delivery parties list entries point to entries in other lists.
@@ -888,8 +950,8 @@ code: |
   refresh_delivery_bundle = True
 ---
 objects:
-  - motion_bundle: ALDocumentBundle.using(elements=[removal_motion, additional_delivery_bundle], title = "Motion to Remove Eviction from Public Record", filename="motion_bundle.pdf", has_addendum=False, enabled=True)
-  - notice_bundle: ALDocumentBundle.using(elements=[notice, additional_delivery_bundle], title = "Notice of Court Date for Motion", filename="notice_bundle.pdf", has_addendum=False, enabled=True)
+  - motion_bundle: ALDocumentBundle.using(elements=[removal_motion, additional_delivery_bundle], title = "Motion to Remove Eviction from Public Record", filename="motion.pdf", has_addendum=False, enabled=True)
+  - notice_bundle: ALDocumentBundle.using(elements=[notice, additional_delivery_bundle], title = "Notice of Court Date for Motion", filename="notice.pdf", has_addendum=False, enabled=True)
 ---
 #the enabled trait of the additional delivery templates is handled in the code block that creates the additional delivery bundle's elements.
 code: |
@@ -923,7 +985,7 @@ attachment:
       - "filing_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
       - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
-      - "case_number": ${""}
+      - "case_number": ${case_number}
       - "unknown_occupants_check": ${unknown_occupants_check}
       - "user_is_plaintiff": ${True if party_label == "plaintiff" else False}
       - "user_is_defendant": ${True if party_label == "defendant" else False}
@@ -959,7 +1021,7 @@ attachment:
       - "delivery_by_email_1": ${ delivery_parties[0].email_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "delivery_hand_1": ${delivery_parties[0].hand_delivery if delivery_parties[0].knows_delivery_method else '' }
       - "delivery_mail_1": ${ delivery_parties[0].mail_delivery if delivery_parties[0].knows_delivery_method else '' }
-      - "delivery_time_1": ${format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method else ''}
+      - "delivery_time_1": ${format_time(delivery_parties[0].delivery_time, format='h:mm') if delivery_parties[0].knows_delivery_method and delivery_parties[0].delivery_time != "" else ''}
       - "delivery_am_1": ${True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='AM' else False}
       - "delivery_pm_1": ${True if delivery_parties[0].knows_delivery_method and format_time(delivery_parties[0].delivery_time, format='a')=='PM' else False}
       - "delivery_name_2": | 
@@ -983,7 +1045,7 @@ attachment:
 attachment:
   variable name: removal_order[i]
   name: removal_order
-  filename: removal_order
+  filename: order
   skip undefined: True
   editable: False
   pdf template file: REF_Order.pdf
@@ -991,7 +1053,7 @@ attachment:
       - "filing_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
       - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
-      - "case_number": ${""}
+      - "case_number": ${case_number}
       - "unknown_occupants": ${unknown_occupants_check}
 ---
 attachment:
@@ -1005,7 +1067,7 @@ attachment:
       - "filing_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
       - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
-      - "case_number": ${""}
+      - "case_number": ${case_number}
       - "motion_title": ${"Remove Eviction Court File from Public Record"}
       - "hearing_date": ${ hearing_date if (defined('hearing_date') and has_court_date) else '' }
       - "hearing_time": ${ format_time(hearing_time, format='h:mm') if (defined('hearing_time') and has_court_date) else '' }
@@ -1072,7 +1134,7 @@ attachment:
       - "filing_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
       - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
-      - "case_number": ${""}
+      - "case_number": ${case_number}
       - "document_name": ${"Motion to Remove Eviction Court File from Public Record"}
       - "user_signature": ${ users[0].name.full(middle='full') if e_signature else ""}
       - "user_address": ${ users[0].address.line_one(bare=True)}
@@ -1113,11 +1175,11 @@ attachment:
       - "delivery_am_2": ${True if x.second_person.knows_delivery_method and format_time(x.second_person.delivery_time, format='a')=='AM' else False}
       - "delivery_pm_2": ${True if x.second_person.knows_delivery_method and format_time(x.second_person.delivery_time, format='a')=='PM' else False}
 ---
-section: Motion details
-id: motion review screen
-event: section_motion
+section: Case info
+id: case info review screen
+event: section_case
 question: |
-  Motion details
+  Case info
 subquestion: |
   Edit your answers below.
 review:
@@ -1134,7 +1196,7 @@ review:
       - recompute:
         - trial_court
     button: |
-      **County where the *Eviction Notice* was filed:**
+      **County where the *Eviction Order* was entered:**
       ${ trial_court.address.county }
   - Edit: cook_district
     button: |
@@ -1153,6 +1215,80 @@ review:
       Sixth Municipal District, 16501 South Kedzie Parkway, Markham
       % endif
     show if: trial_court_index == -1 
+  - Edit: case_number
+    button: |
+      **What is the case number?**
+      ${case_number}
+  - Edit: users[0].name.first
+    button: |
+      **Your name:**
+      ${ users[0].name.full(middle="full") }
+  - Edit: users[0].address.address
+    button: |
+      **Your address:**
+      ${ users[0].address.on_one_line(bare=True) }
+  - Edit: users[0].has_email_address
+    button: |
+      **Your contact information:**
+      % if users[0].phone_number != "" and users[0].has_email_address == True:
+      
+      * Phone number: ${phone_number_formatted(users[0].phone_number)}
+      * Email address: ${users[0].email}
+      % elif users[0].phone_number != "" and users[0].has_email_address == False:
+      ${phone_number_formatted(users[0].phone_number)}
+      % elif users[0].phone_number == "" and users[0].has_email_address == True:
+      ${users[0].email}
+      % endif
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in users:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in other_parties:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: unknown_occupants_check
+    button: |
+      **Was the Unknown Occupants box checked on the Eviction Complaint?**
+      ${word(yesno(unknown_occupants_check))} 
+---
+section: Motion details
+id: motion review screen
+event: section_motion
+question: |
+  Motion details
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in users:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name, lawyer, address, and delivery info)**
+
+      % for my_var in other_parties:
+        * ${ my_var.name.full(middle="full") }
+      % endfor
+  - Edit: contacted_others
+    button: |
+      **Have you contacted the other parties about removing the eviction from the public record?**
+      ${word(yesno(contacted_others))}
+  - Edit: any_object
+    button: |
+      **Do any of the other parties object to removing the eviction from the public record?**
+      ${word(yesno(any_object))}
+    show if: contacted_others
   - Edit: foreclosure
     button: |
       % if party_label == "defendant":
@@ -1228,19 +1364,6 @@ review:
       % for my_var in other_parties:
         * ${ my_var.name.full(middle="full") }
       % endfor
-  - Edit: unknown_occupants_check
-    button: |
-      **Was the Unknown Occupants box checked on the Eviction Complaint?**
-      ${word(yesno(unknown_occupants_check))}
-  - Edit: contacted_others
-    button: |
-      **Have you contacted the other parties about removing the eviction from the public record?**
-      ${word(yesno(contacted_others))}
-  - Edit: any_object
-    button: |
-      **Do any of the other parties object to removing the eviction from the public record?**
-      ${word(yesno(any_object))}
-    show if: contacted_others
   - Edit: has_court_date
     button: |
       **Do you already have a court date for your motion from the clerk?**
@@ -1255,6 +1378,10 @@ review:
       **Courtroom:**
       ${ courtroom }
     show if: has_court_date
+  - Edit: e_signature
+    button: |
+      **Do you want to add your e-signature to your forms?**
+      ${ word(yesno(e_signature)) }
 ---
 id: delivery party review
 continue button field: x.review_delivery
@@ -1317,7 +1444,11 @@ review:
   - Edit: x.delivery_date
     button: |
       **Delivery on:**
+      % if x.delivery_time != '':
       ${ x.delivery_date } at ${ format_time(x.delivery_time, "h:mm a") }
+      % else:
+      ${ x.delivery_date }
+      % endif
     show if: x.knows_delivery_method
 ---
 id: users review
@@ -1366,39 +1497,6 @@ columns:
 delete buttons: True
 confirm: True
 ---
-section: About you
-id: user review screen
-event: section_about_you
-question: |
-  About you
-subquestion: |
-  Edit your answers below.
-review:
-  - Edit: users[0].name.first
-    button: |
-      **Your name:**
-      ${ users[0].name.full(middle="full") }
-  - Edit: users[0].address.address
-    button: |
-      **Your address:**
-      ${ users[0].address.on_one_line(bare=True) }
-  - Edit: users[0].has_email_address
-    button: |
-      **Your contact information:**
-      % if users[0].phone_number != "" and users[0].has_email_address == True:
-      
-      * Phone number: ${phone_number_formatted(users[0].phone_number)}
-      * Email address: ${users[0].email}
-      % elif users[0].phone_number != "" and users[0].has_email_address == False:
-      ${phone_number_formatted(users[0].phone_number)}
-      % elif users[0].phone_number == "" and users[0].has_email_address == True:
-      ${users[0].email}
-      % endif
-  - Edit: e_signature
-    button: |
-      **Do you want to add your e-signature to your forms?**
-      ${ word(yesno(e_signature)) }
----
 id: review screen
 event: review_answers
 question: |
@@ -1419,7 +1517,7 @@ review:
       - recompute:
         - trial_court
     button: |
-      **County where the *Eviction Notice* was filed:**
+      **County where the *Eviction Order* was entered:**
       ${ trial_court.address.county }
   - Edit: cook_district
     button: |
@@ -1438,6 +1536,10 @@ review:
       Sixth Municipal District, 16501 South Kedzie Parkway, Markham
       % endif
     show if: trial_court_index == -1 
+  - Edit: case_number
+    button: |
+      **What is the case number?**
+      ${case_number}
   - Edit: foreclosure
     button: |
       % if party_label == "defendant":
