@@ -65,7 +65,7 @@ code: |
   if contacted_others == True:
     any_object
   set_progress(40)
-  if foreclosure == False:
+  if foreclosure == False and party_label == "defendant":
     sufficiency_info
     if sufficiency == False:
       no_reason_kickout
@@ -164,7 +164,7 @@ id: contact other parties
 question: |
   Have you contacted the other parties about removing the eviction from the public record?
 subquestion: |
-  It may be helpful to your motion if the parties have agreed to remove the eviction court file from the public record. 
+  It may be helpful if the parties have agreed to remove the eviction court file from the public record. 
 
   An agreement is not required. You can ask the judge even if there is no agreement.
 fields:
@@ -196,13 +196,9 @@ fields:
 id: sufficiency info
 continue button field: sufficiency_info
 question: |
-  Removing an eviction without a foreclosure
+  Legal basis for removing an eviction
 subquestion: |
-  % if party_label == "defendant":
-  An eviction can still be removed from the public record even if the building you were living in was not foreclosed on. The eviction court file **may** be removed if:
-  % else:
-  An eviction can still be removed from the public record even if the building the defendant was living in was not foreclosed on. The eviction court file **may** be removed if:
-  % endif
+  The eviction court file **may** be removed from the public record if:
   
   * The landlord made a mistake in filing the eviction, and
   * It is more important to keep the eviction record from the public than letting the public see it.
@@ -268,7 +264,7 @@ fields:
   - Other reason: other_fact_law_text
     input type: area
     rows: 2
-    maxlength: 112
+    maxlength: 125
     show if: 
       variable: fact_law['other'] 
       is: True
@@ -289,13 +285,13 @@ subquestion: |
   * ${other_fact_law_text}
   % endif
   
-  Please provide details explaining your answer.
+  Please provide details explaining your answer. If you have nothing to add, click **Next**.
 fields:
-  - Details: additional_details_fact_law
+  - Details (optional): additional_details_fact_law
     required: False
     input type: area
     rows: 5
-    maxlength: 300
+    maxlength: 325
 ---
 id: interest of justice
 question: |
@@ -314,12 +310,12 @@ fields:
   - Other reason: other_interest_justice_text
     input type: area
     rows: 2
-    maxlength: 168
+    maxlength: 175
     show if: 
       variable: interest_justice['other'] 
       is: True
 ---
-id: additional details fact law
+id: additional details interest of justice
 question: |
   Why is it fair to remove this eviction from the public record?
 subquestion: |
@@ -332,17 +328,19 @@ subquestion: |
   * ${other_interest_justice_text}
   % endif
   
-  Please provide details explaining your answer.
+  Please provide details explaining your answer. If you have nothing to add, click **Next**
 fields:
-  - Details: additional_details_interest_justice
+  - Details (optional): additional_details_interest_justice
     required: False
     input type: area
     rows: 6
-    maxlength: 350
+    maxlength: 375
 ---
 id: unknown occupants check
 question: |
   Was the **Unknown Occupants** box checked on the *Eviction Complaint*?
+subquestion: |
+  If the Eviction Complaint lists "Unknown Occupants" as a defendant, click **Yes**.
 fields:
   - no label: unknown_occupants_check
     datatype: yesnoradio
@@ -466,7 +464,7 @@ content: |
 ---
 id: case number
 question: |
-  What is the case number?
+  What is the case number on the *Eviction Order*?
 subquestion: |
   ${ collapse_template(case_number_help) }  
 fields:
