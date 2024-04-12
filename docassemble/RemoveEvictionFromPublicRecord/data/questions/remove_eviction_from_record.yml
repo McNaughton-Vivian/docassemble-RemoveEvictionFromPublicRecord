@@ -338,11 +338,11 @@ fields:
 ---
 id: unknown occupants check
 question: |
-  Was the **Unknown Occupants** box checked on the *Eviction Complaint*?
+  Are "Unknown Occupants" listed as defendants on your Eviction Complaint?
 subquestion: |
-  If the Eviction Complaint lists "Unknown Occupants" as a defendant, click **Yes**.
+  Answer **Yes** if they were listed on the Eviction Complaint. They could be listed as defendants or there might be a checkbox.
 fields:
-  - no label: unknown_occupants_check
+  - "Are Unknown Occupants listed on the Eviction Complaint?": unknown_occupants_check
     datatype: yesnoradio
 ---
 code: |
