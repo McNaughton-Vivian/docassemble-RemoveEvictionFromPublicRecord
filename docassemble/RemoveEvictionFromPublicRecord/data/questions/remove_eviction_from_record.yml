@@ -54,12 +54,13 @@ code: |
   party_label
   trial_court_index
   case_number
+  unknown_occupants_check
   users.gather()
   set_progress(20)
   users[0].address.address
   users[0].has_email_address
   other_parties.gather()
-  unknown_occupants_check
+  
   
   nav.set_section('section_motion') 
   if contacted_others == True:
@@ -76,7 +77,7 @@ code: |
     
   nav.set_section('section_delivery')
   set_progress(60)
-  notice_intro
+  #notice_intro
   
   if has_court_date:
     hearing_date
@@ -121,7 +122,7 @@ continue button field: how_to_use
 question: |
   Instructions
 subquestion: |
-  To use this program you will need a copy of the **{Eviction Order}** that was entered against you.
+  To use this program you will need a copy of your eviction court case papers. If an **{Eviction Order}** was entered against you, it will have the information you need.
 
   Set aside 10 to 15 minutes to finish this program. You can log in and save your work to return to later. 
  
@@ -142,9 +143,9 @@ question: |
 subquestion: |
   After you download your *Motion to Remove Eviction Court File from Public Record*, you must file it with the court. This program does not file your forms for you.
   
-  You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your local circuit clerk for how to schedule a motion hearing.
+  You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your [**local circuit clerk**](https://www.illinoiscourts.gov/courts/circuit-court/circuit-court-clerks/) for how to schedule a motion hearing.
   
-  Finally, you will need to send your *Motion to Remove Eviction Court File from Public Record* and *Notice of Court Date for Motion* forms to other parties in your case, if there are any.
+  Finally, you will need to send your *Motion to Remove Eviction Court File from Public Record* and *Notice of Court Date for Motion* forms to other parties in your case.
   
   To learn more, read the instructions you can download at the end of this program. 
 ---
@@ -152,9 +153,9 @@ id: tenant or landlord
 question: |
   Are you the tenant or the landlord?
 subquestion: |
-  If you are listed as a defendant in the *Eviction Order*, you should click **Tenant**.
+  If you are listed as a defendant in the *Eviction Order* or other court papers, you should click **Tenant**.
   
-  If you are listed as a plaintiff in the *Eviction Order*, you should click **Landlord**.
+  If you are listed as a plaintiff in the *Eviction Order* or other court papers, you should click **Landlord**.
 field: party_label
 choices:
   - Tenant: defendant
@@ -203,7 +204,7 @@ subquestion: |
   * The landlord made a mistake in filing the eviction, and
   * It is more important to keep the eviction record from the public than letting the public see it.
   
-  The judge will decide whether to remove the eviction from the public record.
+  The judge will decide whether to remove the eviction from the public record. 
   
   ${collapse_template(about_mistake)}
 ---
@@ -213,7 +214,7 @@ subject: |
 content: |
   A **mistake** in filing the eviction would mean that the landlord got the facts or the law wrong in the eviction case.
   
-  For example, the landlord may not have had areason to file the eviction, or the tenant may not have been properly served.
+  For example, the landlord may not have had a reason to file the eviction, or the tenant may not have been properly served.
 ---
 id: sufficiency check
 question: |
@@ -222,11 +223,11 @@ question: |
   % else:
   Did you make a mistake in filing the eviction?
   % endif
-subquestion: |
+subquestion: | 
   % if party_label == "defendant":
-  For example, the landlord could have had no reason to file the eviction in the first place or you were not properly served.
+  This means the landlord got the facts or the law wrong in the eviction case. For example, the landlord could have had no reason to file the eviction in the first place or you were not properly served.
   % else:
-  For example, you could have had no reason to file the eviction in the first place or the defendant was not properly served.
+  This means you got the facts or the law wrong in the eviction case. For example, you could have had no reason to file the eviction in the first place or the defendant was not properly served.
   % endif
 fields:
   - no label: sufficiency
@@ -252,6 +253,8 @@ id: fact law error
 question: |
   How were the facts or law wrong?
 subquestion: |
+  Check all that apply.
+
   You will be able to explain your answer and give details on the next screen.
 fields:
   - The facts or law were wrong because...: fact_law
@@ -286,6 +289,8 @@ subquestion: |
   % endif
   
   Please provide details explaining your answer. If you have nothing to add, click **Next**.
+  
+  ${collapse_template(fact_details_help)}
 fields:
   - Details (optional): additional_details_fact_law
     required: False
@@ -293,11 +298,23 @@ fields:
     rows: 5
     maxlength: 325
 ---
+template: fact_details_help
+subject: |
+  **What should I put here?**
+content: |
+  Here are some examples:
+  
+  * I was not properly served because I was out of the country.
+  * I had already moved out of the apartment on the day my landlord says she served me an eviction notice.
+  
+---
 id: interest of justice
 question: |
   What makes it fair to remove this eviction from the public record?
 subquestion: |
-  Most court cases are kept in the public record. Sometimes it is unfair to the parties in a case to keep the court file open to the public. The law requires you give reasons why it is important to keep the eviction court file out of the public record.
+  Most court cases are kept in the public record. Sometimes it is unfair to the parties in a case to keep the court file open to the public. The law requires you give reasons why it is more important to keep the eviction record from the public than letting the public see it.
+  
+  Check all that apply.
   
   You will be able to explain your answer and give details on the next screen.
 fields:
@@ -328,7 +345,9 @@ subquestion: |
   * ${other_interest_justice_text}
   % endif
   
-  Please provide details explaining your answer. If you have nothing to add, click **Next**
+  Please provide details explaining your answer. If you have nothing to add, click **Next**.
+  
+  ${collapse_template(interest_example)}
 fields:
   - Details (optional): additional_details_interest_justice
     required: False
@@ -336,14 +355,33 @@ fields:
     rows: 6
     maxlength: 375
 ---
+template: interest_example
+subject: |
+  **What should I put here?**
+content: |
+  Here are some examples:
+  
+  * There is no value for the public since my landlord incorrectly brought this case.
+  * I have been unable to rent an apartment due to my record and I have become unhoused.
+---
 id: unknown occupants check
 question: |
   Are "Unknown Occupants" listed as defendants on your Eviction Complaint?
 subquestion: |
   Answer **Yes** if they were listed on the Eviction Complaint. They could be listed as defendants or there might be a checkbox.
+  
+  ${collapse_template(unknown_occupants_help)}
 fields:
   - "Are Unknown Occupants listed on the Eviction Complaint?": unknown_occupants_check
     datatype: yesnoradio
+---
+template: unknown_occupants_help
+subject: |
+  **Where can I find this?**
+content: |  
+  The plaintiffs and defendants are typically listed near the top of a court form. If a form has a checkbox for unknown occupants, it will be by the list of defendants.
+  
+  [FILE uknown_occupants_image.png, 100%, Eviction complaint unknown occupants]
 ---
 code: |
   if party_label == 'plaintiff':
@@ -372,7 +410,7 @@ fields:
 ---
 template: long_name_help
 subject: |
-  **What if the person's name doesn't fit into 4 fields?**
+  **What if I need more space?**
 content: |
   If the person has a long name like "Jane Smith, Director of Housing," select **Business or organization**. You can then enter the full name and title.
 ---
@@ -562,7 +600,7 @@ subquestion: |
 id: trial court county
 continue button field: case_county
 question: |
-  Which county was the *Eviction Notice* filed in?
+  Which county was the *Eviction Complaint* filed in?
 fields:
   - no label: trial_court_index
     datatype: integer
@@ -586,8 +624,8 @@ fields:
   - Do you have an email address?: users[0].has_email_address      
     datatype: yesnoradio
   - note: |
-      This email address will appear on your court forms. Be sure to check 
-      this email daily, otherwise you may miss important information about 
+      This email address will appear on your court forms. Be sure to **check 
+      this email daily**, otherwise you may miss important information about 
       your case.
     show if: users[0].has_email_address      
   - Email address: users[0].email    
@@ -692,7 +730,7 @@ subquestion: |
 
   The Proof of Delivery section is where you explain how you will send a copy of your forms to the other parties in the case.
 
-  For best results, complete the Proof of Delivery section and send the forms today.
+  For best results, complete the Proof of Delivery section and send the forms as soon as you file your motion.
 
   If you do not know this now, you can add it to the Proof of Delivery section of your forms later.
 field: x.knows_delivery_method
@@ -855,7 +893,7 @@ continue button field: seal_or_impound_info
 question: |
   About the court hearing
 subquestion: |
-  At the hearing, the court may use the word **seal** or **impound** instead of **remove**. If you do not know which word the court uses, you should use **remove**.
+  At the hearing, the court may use the word **seal** or **impound** instead of **remove**. You may want to use the word the court uses, if you know it.
   
   You can learn more from the instructions page that comes with your forms.
 ---
@@ -865,6 +903,10 @@ question: |
   Background checks
 subquestion: |
   If you remove an eviction from the public record but it shows up later in a background check, your rights may have been violated. If that happens, you may want to speak to a lawyer or a consumer rights advocate.
+  
+  If you use your landlord as a reference, know that they can still give others information about the eviction.
+  
+  Removing an eviction from the public record does not change any other orders entered in the eviction case.
   
   Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
 ---
