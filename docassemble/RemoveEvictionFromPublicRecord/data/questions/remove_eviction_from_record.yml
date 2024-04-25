@@ -54,12 +54,14 @@ code: |
   party_label
   trial_court_index
   case_number
-  unknown_occupants_check
+  
   users.gather()
   set_progress(20)
+  
   users[0].address.address
   users[0].has_email_address
   other_parties.gather()
+  unknown_occupants_check
   
   
   nav.set_section('section_motion') 
@@ -253,9 +255,9 @@ id: fact law error
 question: |
   How were the facts or law wrong?
 subquestion: |
-  Check all that apply.
-
   You will be able to explain your answer and give details on the next screen.
+  
+  Check all that apply.
 fields:
   - The facts or law were wrong because...: fact_law
     datatype: checkboxes
@@ -314,9 +316,9 @@ question: |
 subquestion: |
   Most court cases are kept in the public record. Sometimes it is unfair to the parties in a case to keep the court file open to the public. The law requires you give reasons why it is more important to keep the eviction record from the public than letting the public see it.
   
-  Check all that apply.
-  
   You will be able to explain your answer and give details on the next screen.
+  
+  Check all that apply.
 fields:
   - It is more important to keep the court file from being seen by the public than it is to allow the public to see it because...: interest_justice
     datatype: checkboxes
@@ -398,7 +400,7 @@ question: |
   % if i == 0:
   What is your name?
   % else:
-  What is the name of the ${ordinal(i)} ${party_label} listed on the *Eviction Notice*?
+  What is the name of the ${ordinal(i)} ${party_label} listed on the *Eviction Complaint*?
   % endif
 subquestion: |
   % if i != 0:
@@ -417,13 +419,21 @@ content: |
 id: any other users
 question: |
   % if party_label == "defendant":
-  Is anyone else listed as a defendant on the *Eviction Notice*?
+  Is anyone else listed as a defendant on the *Eviction Complaint*?
   % else:
-  Is anyone else listed as a plaintiff on the *Eviction Notice*?
+  Is anyone else listed as a plaintiff on the *Eviction Complaint*?
   % endif
 subquestion: |
+  % if party_label == "defendant":
+  These would be the other tenants listed on the eviction court papers.
+  
+  % endif  
   ${ collapse_template(other_users_help) }  
-
+  
+  % if party_label == "defendant":
+  **Note:** If "Unknown Occupants" are listed on the Eviction Complaint as defendants, you can add them to your forms on another screen.
+  
+  % endif
   % if len(users.elements) > 1:  
   So far you have told us about ${comma_and_list(users.complete_elements().full_names())}.
   % endif  
@@ -437,13 +447,13 @@ subject: |
 content: |  
   You said you are the ${ party_label.capitalize() }. The other people on your side of the case would be co-${ party_label}s.
   
-  The other ${ party_label}s should be listed with you at the top of the *Eviction Notice*.
+  The other ${ party_label}s should be listed with you at the top of the *Eviction Complaint*.
 ---
 sets:
   - other_parties[i].name.first
 id: other party name
 question: |
-  What is the name of the ${ ordinal(i) } ${ opposing_label } on the *Eviction Notice*?
+  What is the name of the ${ ordinal(i) } ${ opposing_label } on the *Eviction Complaint*?
 subquestion: |
   ${ collapse_template(long_name_help) }
 fields:
@@ -454,6 +464,10 @@ id: any more other parties
 question: |
   Are there any other ${ opposing_label }s in the case?
 subquestion: |  
+  % if party_label == "defendant":
+  **Note:** If "Unknown Occupants" are listed on the Eviction Complaint as defendants, you can add them to your forms on another screen.
+  
+  % endif
   So far you have told us about ${comma_and_list(other_parties.complete_elements().full_names())}.
 fields:
   - "Anyone else?": other_parties.there_is_another
@@ -523,11 +537,11 @@ content: |
 id: delivery intro
 continue button field: delivery_intro
 question: |
-  Send your ${ form_name } to all other parties
+  Send your *${ form_name }* to all other parties
 subquestion: |
   These are the other parties in this case: ${comma_and_list(delivery_parties)}.
 
-  You must send a copy of your ${ form_name } to each of them.
+  You must send a copy of your *${ form_name }* to each of them.
 
   If someone in the case has a lawyer, you only need to send it to their lawyer.
 ---
@@ -766,7 +780,7 @@ question: |
 subquestion: |  
   You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
 
-  For best results, complete the Proof of Delivery section and send the forms today.
+  For best results, complete the Proof of Delivery section and send the forms as soon as you file your Motion.
 
   **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 
@@ -807,7 +821,7 @@ question: |
 subquestion: |  
   You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
 
-  For best results, complete the Proof of Delivery section and send the forms today.
+  For best results, complete the Proof of Delivery section and send the forms as soon as you file your Motion.
 
   **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 
@@ -834,12 +848,12 @@ id: delivery time
 generic object: ALIndividual
 question: |
   % if x.is_represented:
-  When will you send your ${ form_name } to ${ x.lawyer.name.full(middle="full") }?
+  When will you send your *${ form_name }* to ${ x.lawyer.name.full(middle="full") }?
   % else:
-  When will you send your ${ form_name } to ${ x.name.full(middle="full") }?
+  When will you send your *${ form_name }* to ${ x.name.full(middle="full") }?
   % endif
 subquestion: |
-  Be sure to do this **before** you have a hearing on this ${ form_name }. For best results, complete the Proof of Delivery section and send the forms today.
+  Be sure to do this **before** you have a hearing on this *${ form_name }*. For best results, complete the Proof of Delivery section and send the forms as soon as you file your Motion.
   
   **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 fields:
@@ -875,6 +889,33 @@ subquestion: |
 
   * If a party in your case does not have a lawyer, you can hand-deliver the forms to them or to a family member who is 13 or older at their home.
   * If they do have a lawyer, you can hand-deliver the forms to the lawyer or to the lawyer's office.
+---
+id: signature
+question: |
+  Do you want to add your e-signature to your forms?
+subquestion: |
+  This program can put "**/s/ ${users[0].name.full(middle='full')}**" where you would sign your name. The court will accept this as your signature.
+  
+  If you do not add your **{e-signature}** now, you must sign your forms before you file them.
+  
+  <div class="alert alert-info ilao-info" role="alert">
+    <h6 class="alert-heading">About e-signatures</h6>
+    <p>By signing your <i>Motion to Remove Eviction Court File from Public Record</i>, you are certifying that:
+  <p>
+  <p><ul>
+  <li>You read the document,</li>
+  <li>You believe it to be true and correct, and</li>
+  <li>You are not filing it for an improper purpose.</li>
+  </ul><p>
+  <p>See the <a href="https://ilcourtsaudio.blob.core.windows.net/antilles-resources/resources/9ce1fce9-895f-463e-b87d-f9b7631f8fde/Rule%20137.pdf"><b>Illinois Supreme Court Rule 137</b></a> for more information.</p>
+  </div>
+field: e_signature
+choices:
+  - Yes: True
+  - No, I will sign my forms later.: False
+terms:
+  - "e-signature": |
+      An e-signature is an electronic signature. It is a digital version of a signature that has the same effect as a hand-written signature.
 ---
 template: signature_help
 subject: |
