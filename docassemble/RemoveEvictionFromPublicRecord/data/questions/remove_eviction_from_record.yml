@@ -268,7 +268,7 @@ fields:
       - Other: other
   - Other reason: other_fact_law_text
     input type: area
-    rows: 2
+    rows: 3
     maxlength: 125
     show if: 
       variable: fact_law['other'] 
@@ -297,7 +297,7 @@ fields:
   - Details (optional): additional_details_fact_law
     required: False
     input type: area
-    rows: 5
+    rows: 6
     maxlength: 325
 ---
 template: fact_details_help
@@ -328,7 +328,7 @@ fields:
       - Other: other
   - Other reason: other_interest_justice_text
     input type: area
-    rows: 2
+    rows: 4
     maxlength: 175
     show if: 
       variable: interest_justice['other'] 
@@ -354,7 +354,7 @@ fields:
   - Details (optional): additional_details_interest_justice
     required: False
     input type: area
-    rows: 6
+    rows: 7
     maxlength: 375
 ---
 template: interest_example
@@ -464,7 +464,7 @@ id: any more other parties
 question: |
   Are there any other ${ opposing_label }s in the case?
 subquestion: |  
-  % if party_label == "defendant":
+  % if party_label == "plaintiff":
   **Note:** If "Unknown Occupants" are listed on the Eviction Complaint as defendants, you can add them to your forms on another screen.
   
   % endif
@@ -576,7 +576,7 @@ question: |
 subquestion: |
   In some counties, the circuit clerk can give you a hearing date before you file your motion. In other counties, you will get a hearing date when you file your motion. If you have this information now, you can add it to your forms.
   
-  If the clerk gives you the hearing date after you file your *Motion*, you can add it to your *Notice of Court Date for Motion* later.
+  If the clerk gives you the hearing date after you file your motion, you can add it to your *Notice of Court Date for Motion* later.
 fields:
   - "Know court date and time?": has_court_date
     datatype: yesnoradio
@@ -585,7 +585,7 @@ id: hearing info
 question: |
   Court hearing information
 subquestion: |
-  Enter the date, time, and courtroom information for the court hearing on your motion. If the clerk did not give you a courtroom yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your *Motion*.
+  Enter the date, time, and courtroom information for the court hearing on your motion. If the clerk did not give you a courtroom yet, leave it blank. You can add it to the *Notice of Court Date for Motion* after you file your motion.
 fields:
   - Date: hearing_date
     datatype: date
@@ -899,7 +899,7 @@ subquestion: |
   If you do not add your **{e-signature}** now, you must sign your forms before you file them.
   
   <div class="alert alert-info ilao-info" role="alert">
-    <h6 class="alert-heading">About e-signatures</h6>
+    <h6 class="alert-heading">What it means to sign your forms</h6>
     <p>By signing your <i>Motion to Remove Eviction Court File from Public Record</i>, you are certifying that:
   <p>
   <p><ul>
@@ -936,7 +936,7 @@ question: |
 subquestion: |
   At the hearing, the court may use the word **seal** or **impound** instead of **remove**. You may want to use the word the court uses, if you know it.
   
-  You can learn more from the instructions page that comes with your forms.
+  You can learn more from the instructions that come with your forms.
 ---
 id: your rights background checks
 continue button field: your_rights
