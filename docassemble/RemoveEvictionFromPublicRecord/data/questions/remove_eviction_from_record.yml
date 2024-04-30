@@ -297,7 +297,7 @@ fields:
   - Details (optional): additional_details_fact_law
     required: False
     input type: area
-    rows: 6
+    rows: 7
     maxlength: 325
 ---
 template: fact_details_help
@@ -744,7 +744,7 @@ subquestion: |
 
   The Proof of Delivery section is where you explain how you will send a copy of your forms to the other parties in the case.
 
-  For best results, complete the Proof of Delivery section and send the forms as soon as you file your motion.
+  For best results, complete the Proof of Delivery section and send the forms as soon as you file them.
 
   If you do not know this now, you can add it to the Proof of Delivery section of your forms later.
 field: x.knows_delivery_method
@@ -780,7 +780,7 @@ question: |
 subquestion: |  
   You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
 
-  For best results, complete the Proof of Delivery section and send the forms as soon as you file your Motion.
+  For best results, complete the Proof of Delivery section and send the forms as soon as you file them.
 
   **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 
@@ -821,7 +821,7 @@ question: |
 subquestion: |  
   You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
 
-  For best results, complete the Proof of Delivery section and send the forms as soon as you file your Motion.
+  For best results, complete the Proof of Delivery section and send the forms as soon as you file them.
 
   **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 
@@ -853,7 +853,7 @@ question: |
   When will you send your *${ form_name }* to ${ x.name.full(middle="full") }?
   % endif
 subquestion: |
-  Be sure to do this **before** you have a hearing on this *${ form_name }*. For best results, complete the Proof of Delivery section and send the forms as soon as you file your Motion.
+  Be sure to do this **before** you have a hearing on this *${ form_name }*. For best results, complete the Proof of Delivery section and send the forms as soon as you file them.
   
   **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
 fields:
