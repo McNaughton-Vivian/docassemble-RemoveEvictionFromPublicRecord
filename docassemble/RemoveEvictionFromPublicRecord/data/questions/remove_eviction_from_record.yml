@@ -68,7 +68,7 @@ code: |
   if contacted_others == True:
     any_object
   set_progress(40)
-  if foreclosure == False and party_label == "defendant":
+  if foreclosure == False:
     sufficiency_info
     if sufficiency == False:
       no_reason_kickout
@@ -147,7 +147,7 @@ subquestion: |
   
   You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your [**local circuit clerk**](https://www.illinoiscourts.gov/courts/circuit-court/circuit-court-clerks/) for how to schedule a motion hearing.
   
-  Finally, you will need to send your *Motion to Remove Eviction Court File from Public Record* and *Notice of Court Date for Motion* forms to other parties in your case.
+  Finally, you will need to send your *Motion to Remove Eviction Court File from Public Record* and *Notice of Court Date for Motion* forms to other parties in your case or their lawyers, if they have them.
   
   To learn more, read the instructions you can download at the end of this program. 
 ---
@@ -192,6 +192,14 @@ question: |
   % else:
   Was the eviction filed because the building the defendant was living in foreclosed on?
   % endif
+subquestion: |
+  % if party_label == "defendant":
+  A foreclosure is a forced sale of a property. If a bank became the building's owner because the landlord could not pay their loan to the bank, that means the building was foreclosed on.
+  
+  If your landlord chose to sell the building, that means the building was not foreclosed on.
+  
+  % endif
+  If a foreclosure was filed but was later dismissed, you should click **No** here.
 fields:
   - no label: foreclosure
     datatype: yesnoradio
@@ -203,7 +211,7 @@ question: |
 subquestion: |
   The eviction court file **may** be removed from the public record if:
   
-  * The landlord made a mistake in filing the eviction, and
+  * The eviction is without a basis in fact or law, and
   * It is more important to keep the eviction record from the public than letting the public see it.
   
   The judge will decide whether to remove the eviction from the public record. 
@@ -212,25 +220,26 @@ subquestion: |
 ---
 template: about_mistake
 subject: |
-  **What does "mistake" mean here?**
+  **What makes an eviction "without a basis in fact or law?"**
 content: |
-  A **mistake** in filing the eviction would mean that the landlord got the facts or the law wrong in the eviction case.
+  The two most common reasons an eviction can have no basis are:
   
-  For example, the landlord may not have had a reason to file the eviction, or the tenant may not have been properly served.
+  * The landlord had no reason to file the eviction, or
+  * The renter was not properly served with an eviction notice or summons and a copy of the eviction complaint.
+  
+  % if party_label == "defendant":
+  There are other ways a renter can argue that an eviction has no basis. For example, the renter may have moved out after the eviction was filed, making the eviction moot, or the landlord may have accepted court-based rental assistance.
+  % else:
+  If you have changed your mind about the eviction or the situation has been resolved and you no longer think that this should be public record, you can list that as a reason why the eviction does not have basis in fact or law.
+  % endif
+
+   This program will allow you to write your own reason the eviction is without basis.  However, the judge will decide whether the eviction is without basis. If you do not know if your eviction had no basis, you may want to talk with a lawyer about the eviction. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
 ---
 id: sufficiency check
 question: |
-  % if party_label == "defendant":
-  Did your landlord make a mistake in filing the eviction?
-  % else:
-  Did you make a mistake in filing the eviction?
-  % endif
+  Was the eviction without basis in fact or law?
 subquestion: | 
-  % if party_label == "defendant":
-  This means the landlord got the facts or the law wrong in the eviction case. For example, the landlord could have had no reason to file the eviction in the first place or you were not properly served.
-  % else:
-  This means you got the facts or the law wrong in the eviction case. For example, you could have had no reason to file the eviction in the first place or the defendant was not properly served.
-  % endif
+  ${collapse_template(about_mistake)}
 fields:
   - no label: sufficiency
     datatype: yesnoradio
@@ -241,9 +250,9 @@ question: |
   Sorry
 subquestion: |
   % if party_label == "defendant":
-  An eviction court file can only be removed from the public record if the building you were evicted from was foreclosed on or the landlord got the facts or law wrong in the eviction case.
+  An eviction court file can only be removed from the public record if the building you were evicted from was foreclosed on or the eviction did not have enough of a basis in fact or law.
   % else:
-  An eviction court file can only be removed from the public record if the building the defendant was evicted from was foreclosed on or you got the facts or law wrong in the eviction case.
+  An eviction court file can only be removed from the public record if the building the defendant was evicted from was foreclosed on or the eviction did not have enough of a basis in fact or law.
   % endif
   
   Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
@@ -253,7 +262,7 @@ buttons:
 ---
 id: fact law error
 question: |
-  How were the facts or law wrong?
+  Why was the eviction without basis in fact or law?
 subquestion: |
   You will be able to explain your answer and give details on the next screen.
   
@@ -744,9 +753,9 @@ subquestion: |
 
   The Proof of Delivery section is where you explain how you will send a copy of your forms to the other parties in the case.
 
-  For best results, complete the Proof of Delivery section and send the forms as soon as you file them.
+  For best results, complete the Proof of Delivery section and send the forms right before you file them with the court.
 
-  If you do not know this now, you can add it to the Proof of Delivery section of your forms later.
+  If you do not know this now, you can add it to the Proof of Delivery section of your forms later. Do not file your forms until you complete the Proof of Delivery section.
 field: x.knows_delivery_method
 choices:
   - Yes: True
@@ -780,9 +789,9 @@ question: |
 subquestion: |  
   You may use US mail or a delivery company, or hand delivery if you or the other party **does not** have an email address.
 
-  For best results, complete the Proof of Delivery section and send the forms as soon as you file them.
+  For best results, complete the Proof of Delivery section and send the forms right before you file them with the court.
 
-  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later. Do not file your forms until you complete the Proof of Delivery section.
 
   ${ collapse_template(efiling_help) }
 fields:
@@ -855,16 +864,20 @@ question: |
 subquestion: |
   Be sure to do this **before** you have a hearing on this *${ form_name }*. For best results, complete the Proof of Delivery section and send the forms as soon as you file them.
   
-  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later.
+  **Note:** If you do not know this now, be sure to add it to the Proof of Delivery section of your forms later. Do not file your forms until you complete the Proof of Delivery section.
 fields:
   - Date: x.delivery_date
     datatype: date
     required: False
     min: ${ today().format("yyyy-MM-dd") }
     max: ${ today().plus(years=1) }
+    help: |
+      You should enter the date you will mail, e-mail, or hand deliver the forms.
   - Time: x.delivery_time
     datatype: time
     required: False
+    help: |
+      You should enter the time you will mail, e-mail, or hand deliver the forms.
 validation code: |
   if (not showifdef('x.delivery_date')):
     x.knows_delivery_date = False
@@ -934,7 +947,7 @@ continue button field: seal_or_impound_info
 question: |
   About the court hearing
 subquestion: |
-  At the hearing, the court may use the word **seal** or **impound** instead of **remove**. You may want to use the word the court uses, if you know it.
+  At the hearing, most courts will use the word **seal** instead of **remove**. Some courts may use the word **impound**. You may want to use the word the court uses, if you know it.
   
   You can learn more from the instructions that come with your forms.
 ---
@@ -947,7 +960,7 @@ subquestion: |
   
   If you use your landlord as a reference, know that they can still give others information about the eviction.
   
-  Removing an eviction from the public record does not change any other orders entered in the eviction case.
+  Removing an eviction from the public record does not undo the eviction or change any other court decisions.
   
   Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
 ---
