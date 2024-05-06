@@ -225,9 +225,9 @@ content: |
   * The renter was not properly served with an eviction notice or summons and a copy of the eviction complaint.
   
   % if party_label == "defendant":
-  There are other ways a renter can argue that an eviction has no basis. For example, the renter may have moved out after the eviction was filed, making the eviction moot, or the landlord may have accepted court-based rental assistance.
+  There are other ways an eviction might have no basis. For example, the renter may have moved out after the eviction was filed or the landlord may have accepted court-based rental assistance.
   % else:
-  If you have changed your mind about the eviction or the situation has been resolved and you no longer think that this should be public record, you can list that as a reason why the eviction does not have basis in fact or law.
+  If you have changed your mind about the eviction or the situation has been resolved and you no longer think that this should be public record, you can list that.
   % endif
 
    You can write your own reasons why the eviction is without basis.  However, the judge will decide whether the eviction is without basis. If you do not know if your eviction had no basis, you may want to talk with a lawyer about the eviction. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
@@ -243,9 +243,9 @@ subquestion: |
   * The renter was not properly served with an eviction notice or summons and a copy of the eviction complaint.
   
   % if party_label == "defendant":
-  There are other ways a renter can argue that an eviction has no basis. For example, the renter may have moved out after the eviction was filed, making the eviction moot, or the landlord may have accepted court-based rental assistance.
+  There are other ways an eviction might have no basis. For example, the renter may have moved out after the eviction was filed or the landlord may have accepted court-based rental assistance.
   % else:
-  If you have changed your mind about the eviction or the situation has been resolved and you no longer think that this should be public record, you can list that as a reason why the eviction does not have basis in fact or law.
+  If you have changed your mind about the eviction or the situation has been resolved and you no longer think that this should be public record, you can list that.
   % endif
 
    You can write your own reasons why the eviction is without basis.  However, the judge will decide whether the eviction is without basis. If you do not know if your eviction had no basis, you may want to talk with a lawyer about the eviction. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
@@ -259,9 +259,9 @@ question: |
   Sorry
 subquestion: |
   % if party_label == "defendant":
-  An eviction court file can only be removed from the public record if the building you were evicted from was foreclosed on or the eviction did not have enough of a basis in fact or law.
+  An eviction court file can only be removed from the public record if the building you were evicted from was foreclosed on or the eviction did not have a basis in fact or law.
   % else:
-  An eviction court file can only be removed from the public record if the building the defendant was evicted from was foreclosed on or the eviction did not have enough of a basis in fact or law.
+  An eviction court file can only be removed from the public record if the building the defendant was evicted from was foreclosed on or the eviction did not have a basis in fact or law.
   % endif
   
   Click **Back** if you made a mistake. Or you can talk with a lawyer to discuss your options. Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
@@ -326,11 +326,16 @@ subject: |
 content: |
   Here are some examples:
   
+  % if party_label == "defendant":
   * I was not properly served because I was out of the country.
   * I had already moved out of the apartment on the day my landlord says she served me an eviction notice.
   * I moved out of the apartment after the eviction was filed.
   * My landlord accepted court-based rental assistance, so I did not owe any rent.
-  * The situation between my landlord and I was resolved and they are letting me remain in the apartment.
+  % else:
+  * The tenant moved out of my property after the eviction was filed.
+  * I accepted court-based rental assistance.
+  * I did not properly serve the eviction notice.
+  % endif
   
 ---
 id: interest of justice
@@ -386,8 +391,13 @@ subject: |
 content: |
   Here are some examples:
   
+  % if party_label == "defendant":
   * There is no value for the public since my landlord incorrectly brought this case.
   * I have been unable to rent an apartment due to my record and I have become unhoused.
+  % else:
+  * The tenant has been unable to rent another apartment and has become unhoused.
+  * There is no value for the public since I incorrectly brought this case.
+  % endif
 ---
 id: unknown occupants check
 question: |
@@ -672,7 +682,6 @@ fields:
   - Email address: users[0].email    
     datatype: email
     show if: users[0].has_email_address
-    required: True
 ---
 id: has lawyer
 generic object: ALIndividual
