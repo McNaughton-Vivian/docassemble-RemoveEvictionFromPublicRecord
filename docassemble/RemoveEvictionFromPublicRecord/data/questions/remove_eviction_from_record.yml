@@ -45,6 +45,7 @@ code: |
   anyone_opposing = True
   form_name = "Motion to Remove Eviction Court File from Public Record"
   sees_nav_bar
+  snapshot_start 
   how_to_use
   set_progress(5)
   whats_next
@@ -106,7 +107,33 @@ code: |
   set_progress(100)
   
   refresh_delivery_bundle
+  snapshot_forms
   get_docs_screen
+---
+code: |
+  stuff_to_snapshot = {
+  	'start_time': str(current_datetime().format_datetime()),
+  	'started_interview': True, 
+  	}
+    
+  stuff_to_snapshot['zip'] = showifdef('users[0].address.zip')
+
+  stuff_to_snapshot['downloaded_forms'] = showifdef('refresh_delivery_bundle')
+  
+  stuff_to_snapshot['defendant_tenant_or_plaintiff_landlord'] = showifdef('party_label')
+  
+  store_variables_snapshot(
+  	data=stuff_to_snapshot, persistent=True
+  	)
+  snapshot_interview_state = True
+---
+code: |
+  snapshot_interview_state
+  snapshot_start = True  
+---
+code: |
+  reconsider('snapshot_interview_state')
+  snapshot_forms = True
 ---
 id: welcome
 question: |
@@ -168,6 +195,8 @@ question: |
   Have you contacted the other parties about removing the eviction from the public record?
 subquestion: |
   It may be helpful if the parties have agreed to remove the eviction court file from the public record. 
+
+  If everyone agrees with removing the eviction from public record, the judge may be more likely to remove it.
 
   An agreement is not required. You can ask the judge even if there is no agreement.
 fields:
@@ -328,13 +357,12 @@ content: |
   
   % if party_label == "defendant":
   * I was not properly served because I was out of the country.
-  * I had already moved out of the apartment on the day my landlord says she served me an eviction notice.
   * I moved out of the apartment after the eviction was filed.
   * My landlord accepted court-based rental assistance, so I did not owe any rent.
   % else:
   * The tenant moved out of my property after the eviction was filed.
   * I accepted court-based rental assistance.
-  * I did not properly serve the eviction notice.
+  * The tenant and I have made an agreement resolving the matter.
   % endif
   
 ---
@@ -393,10 +421,10 @@ content: |
   
   % if party_label == "defendant":
   * There is no value for the public since my landlord incorrectly brought this case.
-  * I have been unable to rent an apartment due to my record and I have become unhoused.
+  * Having the eviction in the public record makes it hard for me to find new housing. I have been unable to rent an apartment due to the record of this eviction.
   % else:
-  * The tenant has been unable to rent another apartment and has become unhoused.
-  * There is no value for the public since I incorrectly brought this case.
+  * Removing this eviction from public record would help the tenant find other housing more quickly and make my unit available for a new tenant.
+  * Both sides believe it is in the best interest for tenant to move. Removing the case from public record would prevent further litigation.
   % endif
 ---
 id: unknown occupants check
