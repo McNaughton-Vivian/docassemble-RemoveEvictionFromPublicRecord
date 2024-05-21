@@ -172,11 +172,11 @@ question: |
 subquestion: |
   After you download your *Motion to Remove Eviction Court File from Public Record*, you must file it with the court. This program does not file your forms for you.
   
-  You may need to schedule a court date for when the judge will hear your motion. The scheduling process is different depending on your location and case type. Check with your [**local circuit clerk**](https://www.illinoiscourts.gov/courts/circuit-court/circuit-court-clerks/) for how to schedule a motion hearing.
+  You may need to schedule a motion hearing for the judge to hear your motion. The scheduling process is different depending on your location and case type. Check with your [**local circuit clerk**](https://www.illinoiscourts.gov/courts/circuit-court/circuit-court-clerks/) for how to schedule a motion hearing.
   
   Finally, you will need to send your forms to the other parties. If someone has a lawyer, you only need to send it to their lawyer.
   
-  To learn more, read the instructions you can download at the end of this program. 
+  To learn more, you can read and download the instructions at the end of this program. 
 ---
 id: tenant or landlord
 question: |
@@ -240,8 +240,6 @@ subquestion: |
   * It is more important to keep the eviction record from the public than letting the public see it.
   
   The judge will decide whether to remove the eviction from the public record. 
-  
-  ${collapse_template(about_mistake)}
 ---
 #if you update this template's content, be sure to also update the sufficiency check block's subquestion
 template: about_mistake
@@ -1026,8 +1024,6 @@ subquestion: |
   [NEWLINE]
 
   ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
-
-  **Note:** This program does not file your Motion with the court or deliver it to other parties in your case. Learn about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/efileil/).
   
   Thank you for using ILAO Easy Forms!
 under: |
@@ -1204,7 +1200,7 @@ attachment:
   editable: False
   pdf template file: MOT_Notice_of_Court_Date_for_Motion.pdf
   fields:
-      - "filing_county": ${ trial_court.address.county.upper() }
+      - "trial_court_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
       - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
       - "case_number": ${case_number}
@@ -1258,7 +1254,7 @@ attachment:
       - "delivery_time_2": ${format_time(delivery_parties[1].delivery_time, format='h:mm') if delivery_parties[1].knows_delivery_method else ''}
       - "delivery_am_2": ${True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='AM' else False}
       - "delivery_pm_2": ${True if delivery_parties[1].knows_delivery_method and format_time(delivery_parties[1].delivery_time, format='a')=='PM' else False}
-      - "additional_delivery": ${ True if delivery_parties.number_gathered() > 2 else False}
+      - "additional_proof": ${ True if delivery_parties.number_gathered() > 2 else False}
 ---
 #This needs to be a generic object. Otherwise, we would need two attachment blocks: one for users[i] and another for other_parties[i].
 #When you need to refer to delivery_parties[i], use x. When you need to refer to delivery_parties[i+1], use x.second_person.
@@ -1271,11 +1267,11 @@ attachment:
   editable: False
   pdf template file: CC_Additional_Proof_of_Delivery.pdf
   fields:
-      - "filing_county": ${ trial_court.address.county.upper() }
+      - "trial_court_county": ${ trial_court.address.county.upper() }
       - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
       - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
       - "case_number": ${case_number}
-      - "document_name": ${"Motion to Remove Eviction Court File from Public Record"}
+      - "document_name": ${"Notice of Court Date for Motion"}
       - "user_signature": ${ users[0].name.full(middle='full') if e_signature else ""}
       - "user_address": ${ users[0].address.line_one(bare=True)}
       - "user_name": ${users[0].name.full(middle='full')}
