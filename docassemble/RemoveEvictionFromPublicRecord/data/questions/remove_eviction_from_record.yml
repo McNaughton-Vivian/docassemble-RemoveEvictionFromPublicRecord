@@ -694,20 +694,48 @@ validation code: |
 id: your contact information
 question: |
   What is your contact information?
+subquestion: |
+  The court or other parties might need to contact you about this case.
+
+  **This information will appear on your court forms.**
+  
+  If you do not want to list a phone number on your forms, leave it blank.
+
+  If you have an email address, you must list it. Be sure to check your email daily, otherwise you may miss important information about your case.
+
+  ${ collapse_template(contact_info_help) }  
 fields:  
   - Phone number: users[0].phone_number
     datatype: al_international_phone
     required: False
-  - Do you have an email address?: users[0].has_email_address      
+  - label: |
+      Do you have an email address?
+    field: users[0].has_email_address      
     datatype: yesnoradio
   - note: |
-      This email address will appear on your court forms. Be sure to **check 
-      this email daily**, otherwise you may miss important information about 
+      This email address will appear on your court forms. Be sure to check 
+      this email daily, otherwise you may miss important information about 
       your case.
     show if: users[0].has_email_address      
   - Email address: users[0].email    
     datatype: email
-    show if: users[0].has_email_address
+    show if: 
+      variable: users[0].has_email_address
+      is: True
+---
+template: contact_info_help
+subject: |
+  **What if I don't want to list my email address?**
+content: |  
+  If you do not want to enter your personal email address, you can create a new email account to get email about your case.
+  
+  To make a new email account try one of these email services:
+  
+  * [**Gmail**](https://accounts.google.com/SignUp)
+  * [**Outlook**](https://outlook.live.com/owa/?nlp=1&signup=1)
+  * [**Yahoo**](https://login.yahoo.com/account/create?.lang=en-US&.intl=us)
+---
+
 ---
 id: has lawyer
 generic object: ALIndividual
@@ -1025,6 +1053,8 @@ subquestion: |
 
   ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
   
+  This program does not file your Motion with the court or deliver it to other parties in your case. You will need to do this yourself. Learn about more about [**e-filing in Illinois**](https://www.illinoiscourts.gov/eservices/efileil/).
+  
   Thank you for using ILAO Easy Forms!
 under: |
   % if not user_logged_in():
@@ -1271,7 +1301,7 @@ attachment:
       - "plaintiffs": ${comma_and_list(users) if party_label == "plaintiff" else comma_and_list(other_parties)}
       - "defendants": ${comma_and_list(users) if party_label == "defendant" else comma_and_list(other_parties)}
       - "case_number": ${case_number}
-      - "document_name": ${"Notice of Court Date for Motion"}
+      - "document_name": ${"Motion to Remove Eviction Court File from Public Record / Notice of Court Date for Motion"}
       - "user_signature": ${ users[0].name.full(middle='full') if e_signature else ""}
       - "user_address": ${ users[0].address.line_one(bare=True)}
       - "user_name": ${users[0].name.full(middle='full')}
