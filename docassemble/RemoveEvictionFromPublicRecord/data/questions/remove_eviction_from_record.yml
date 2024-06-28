@@ -107,6 +107,7 @@ code: |
   set_progress(100)
   
   refresh_delivery_bundle
+  forms_assembling
   snapshot_forms
   get_docs_screen
 ---
@@ -115,6 +116,11 @@ code: |
   	'start_time': str(current_datetime().format_datetime()),
   	'started_interview': True, 
   	}
+  
+  try:
+    stuff_to_snapshot['ip_address'] = device(ip=True)
+  except:
+    pass
     
   stuff_to_snapshot['zip'] = showifdef('users[0].address.zip')
 
@@ -1036,6 +1042,17 @@ subquestion: |
   
   Use **[Get Legal Help](https://www.illinoislegalaid.org/get-legal-help)** to find free or low-cost legal services in your area.
 ---
+id: forms assembling
+continue button field: forms_assembling
+question: |
+  Almost done
+subquestion: |
+  After you click **Next**, it will take a few moments to finish making your forms.
+  
+  ###### You do not need to refresh your screen. Hang in there!
+  
+  &nbsp;
+---
 id: get docs screen
 event: get_docs_screen
 question: |
@@ -1549,7 +1566,7 @@ review:
       **Do you want to add your e-signature to your forms?**
       ${ word(yesno(e_signature)) }
 ---
-id: delivery party review
+id: delivery party review screen
 continue button field: x.review_delivery
 generic object: ALIndividual
 question: |
@@ -1617,7 +1634,7 @@ review:
       % endif
     show if: x.knows_delivery_method
 ---
-id: users review
+id: users review screen
 continue button field: users.revisit
 question: |
   Edit the ${ party_label }s
@@ -1636,7 +1653,7 @@ columns:
 delete buttons: True
 confirm: True
 ---
-id: other parties review
+id: other parties review screen
 continue button field: other_parties.revisit
 question: |
   % if party_label == "plaintiff":
